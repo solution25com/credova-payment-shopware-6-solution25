@@ -1,0 +1,25 @@
+{% set unitPrice = page.cart.price.totalPrice %}
+{% set minFinanceAmount = page.extensions.credova_payment.minFinanceAmount %}
+{% set maxFinanceAmount = page.extensions.credova_payment.maxFinanceAmount %}
+
+{% if page.extensions.credova_payment is defined
+  and unitPrice >= minFinanceAmount
+  and unitPrice <= maxFinanceAmount %}
+
+  <div
+          data-credova-pay-later="true"
+          data-credova-prequal-amount="{{ unitPrice }}"
+          data-credova-button-selector="#payLaterLink"
+          data-credova-form-selector='form[name="confirmOrderForm"]'
+          class="my-4 text-center"
+  >
+    <a
+            href="#"
+            id="payLaterLink"
+            class="font-weight-bold d-block text-start"
+            style="text-decoration: underline;"
+    >
+      See if you qualify for financing
+    </a>
+  </div>
+{% endif %}

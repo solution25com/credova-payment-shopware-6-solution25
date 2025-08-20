@@ -1,0 +1,64 @@
+{
+    "sw-settings":{
+        "index":{
+            "tabCredova": "Credova"
+        }
+    },
+    "sw-settings-credova": {
+    "label": {
+      "minFinanceAmount": "Minimum Finance Amount ($)",
+      "maxFinanceAmount": "Maximum Finance Amount ($)",
+      "showAsLowAs": "Enable 'As Low As' Display",
+      "checkoutFlow": "Checkout Flow Type",
+      "popupType": "Popup Type",
+      "salesChannelSelect": "Sales Channel"
+    },
+    "help": {
+      "minFinanceAmount": "Credova will not display on products less than this dollar amount.",
+      "maxFinanceAmount": "Credova will not display on products greater than this dollar amount.",
+      "showAsLowAs": "Show Credova on product listing pages (PLP) when price parameters are met."
+    },
+    "card": {
+      "salesChannelSettings": "Sales Channel Settings",
+      "displayRules": "Display Rules",
+      "checkoutFlow": "Checkout Flow",
+      "popupConfig": "Popup Configuration"
+    },
+    "notification": {
+      "loadError": {
+        "title": "Error",
+        "message": "Failed to load configuration."
+      },
+      "saveSuccess": {
+        "title": "Success",
+        "message": "Configurations saved successfully."
+      },
+      "saveError": {
+        "title": "Error",
+        "message": "Failed to save configurations."
+      },
+      "validation": {
+        "title": "Validation Error",
+        "message": "Minimum and Maximum Finance Amounts must be between $300 and $5000."
+      }
+    },
+    "options": {
+      "popupType": {
+        "iframe": "Iframe Pop-up",
+        "popup": "Pop-up"
+      },
+      "checkoutFlow": {
+        "auth_capture": "Auth Capture",
+        "auth_only": "Auth Only",
+        "order_first": "Order First"
+      }
+    },
+      "general": {
+        "mainMenuItemGeneral": "Credova payment configuration",
+        "descriptionTextModule": "Configure Credova settings",
+        "saveConfigs": "Save Configurations",
+        "settings": "Settings"
+      }
+    }
+  }
+  

@@ -1,0 +1,18 @@
+{% sw_extends '@Storefront/storefront/component/product/card/price-unit.html.twig' %}
+
+{% block component_product_box_price %}
+	{% set unitPrice = product.calculatedPrice.unitPrice %}
+	{% set minFinanceAmount = product.extensions.credovaFinance.minFinanceAmount %}
+	{% set maxFinanceAmount = product.extensions.credovaFinance.maxFinanceAmount %}
+	{{parent()}}
+	{% if unitPrice is not null
+            and unitPrice >= minFinanceAmount
+            and unitPrice <= maxFinanceAmount %}
+		<p class="credova-button" style="font-size:14px;" data-amount={{unitPrice}} data-type="popup" data-hide-brand="true"></p>
+	{% endif %}
+	 <script src="https://plugin.credova.com/plugin.min.js"></script>
+	 <script>
+	    CRDV.plugin.config({ environment: CRDV.Environment.Sandbox, store: "JRH000", currency: "EUR"  });
+	    CRDV.plugin.inject("credova-button");
+	  </script>
+{% endblock %}

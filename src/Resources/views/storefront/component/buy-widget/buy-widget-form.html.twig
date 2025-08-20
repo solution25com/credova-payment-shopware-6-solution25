@@ -1,0 +1,23 @@
+{% sw_extends '@Storefront/storefront/component/buy-widget/buy-widget-form.html.twig' %}
+
+{% block buy_widget_buy_container %}
+	{% set unitPrice = page.product.calculatedPrice.unitPrice ?? (page.product.calculatedCheapestPrice.unitPrice ?? null) %}
+	{% set minFinanceAmount = page.extensions.credova_payment.minFinanceAmount %}
+	{% set maxFinanceAmount = page.extensions.credova_payment.maxFinanceAmount %}
+
+	{% if page.extensions.credova_payment is defined
+            and unitPrice is not null
+            and unitPrice >= minFinanceAmount
+            and unitPrice <= maxFinanceAmount %}
+		<div 
+            data-credova-pay-later="true" 
+            data-credova-prequal-amount="{{ unitPrice }}" 
+            data-credova-button-selector="#payLaterButton" 
+            data-credova-form-selector='form[name="confirmOrderForm"]'>
+			<button id="payLaterButton" class="btn btn-primary my-3" type="button" data-credova-prequal-button>
+				See if you qualify for financing
+			</button>
+		</div>
+	{% endif %}
+	{{ parent() }}
+{% endblock %}

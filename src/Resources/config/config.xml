@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/shopware/trunk/src/Core/System/SystemConfig/Schema/config.xsd">
+
+    <!-- Environment and Credentials -->
+    <card>
+        <title>Environment Settings</title>
+        <title lang="de-DE">Umgebungseinstellungen</title>
+
+        <input-field type="single-select">
+            <name>environment</name>
+            <label>Mode</label>
+            <label lang="de-DE">Modus</label>
+            <options>
+                <option>
+                    <id>sandbox</id>
+                    <name>Sandbox</name>
+                    <name lang="de-DE">Sandbox</name>
+                </option>
+                <option>
+                    <id>production</id>
+                    <name>Production</name>
+                    <name lang="de-DE">Produktion</name>
+                </option>
+            </options>
+            <defaultValue>sandbox</defaultValue>
+        </input-field>
+
+        <input-field type="text">
+            <name>username</name>
+            <label>Credova Username</label>
+            <label lang="de-DE">Credova Benutzername</label>
+            <placeholder>Enter your API username</placeholder>
+        </input-field>
+
+        <input-field type="password">
+            <name>password</name>
+            <label>Credova Password</label>
+            <label lang="de-DE">Credova Passwort</label>
+            <placeholder>Enter your API password</placeholder>
+        </input-field>
+
+        <input-field type="text">
+            <name>storeCode</name>
+            <label>Store Code</label>
+            <label lang="de-DE">Geschäftscode</label>
+            <placeholder>Enter your Store Code</placeholder>
+        </input-field>
+
+    </card>
+
+</config>

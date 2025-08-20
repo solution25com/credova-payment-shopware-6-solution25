@@ -1,0 +1,11 @@
+{% if page.extensions.credova_payment %}
+  <template credova-payment-pay-later></template>
+
+  <div id="credova-payment-pay-later" data-credova-payment-pay-later="true"
+       data-public-id="{{ page.extensions.credova_payment.publicId }}"
+       data-store-code="{{ page.extensions.credova_payment.storeCode }}"
+       data-mode="{{ page.extensions.credova_payment.mode }}"
+  >
+    <script src="https://plugin.credova.com/plugin.min.js"></script>
+  </div>
+{% endif %}

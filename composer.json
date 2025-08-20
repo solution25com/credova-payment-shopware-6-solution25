@@ -1,0 +1,27 @@
+{
+    "name": "credova/credova",
+    "description": "credova/credova",
+    "type": "shopware-platform-plugin",
+    "version": "1.0.0",
+    "license": "MIT",
+    "require": {
+        "shopware/core": "~6.6.0"
+    },
+    "extra": {
+        "shopware-plugin-class": "Credova\\Credova",
+        "label": {
+            "de-DE": "Credova payment",
+            "en-GB": "Credova payment"
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Credova\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Credova\\Tests\\": "tests/"
+        }
+    }
+}

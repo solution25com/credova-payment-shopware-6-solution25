@@ -1,0 +1,25 @@
+{
+  "base": "/bundles/credova/administration/",
+  "entryPoints": {
+    "credova": {
+      "css": [
+        "/bundles/credova/administration/assets/credova-C5MGUQ-m.css"
+      ],
+      "dynamic": [],
+      "js": [
+        "/bundles/credova/administration/assets/credova-BSynDETr.js"
+      ],
+      "legacy": false,
+      "preload": []
+    }
+  },
+  "legacy": false,
+  "metadatas": {},
+  "version": [
+    "7.1.0",
+    7,
+    1,
+    0
+  ],
+  "viteServer": null
+}

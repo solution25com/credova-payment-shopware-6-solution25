@@ -1,0 +1,38 @@
+<mt-card style="margin-top: 40px;" :title="$tc('sw-settings-credova.card.salesChannelSettings')">
+    <sw-sales-channel-switch
+        ref="salesChannelSwitch"
+        :sales-channel-id="salesChannelId"
+        :label="$tc('sw-settings-credova.label.salesChannelSelect')"
+        @change-sales-channel-id="onSalesChannelChanged"
+    />
+</mt-card>
+
+<mt-card :title="$tc('sw-settings-credova.card.displayRules')">
+	<div>
+		<div class="sw-settings-credova-form__label">
+			{{ $tc('sw-settings-credova.label.minFinanceAmount') }}
+			<sw-help-text :text="$tc('sw-settings-credova.help.minFinanceAmount')"/>
+		</div>
+		<sw-number-field v-model:value="config['Credova.config.minFinanceAmount']" step="1"/>
+	</div>
+	<div>
+		<div class="sw-settings-credova-form__label">
+			{{ $tc('sw-settings-credova.label.maxFinanceAmount') }}
+			<sw-help-text :text="$tc('sw-settings-credova.help.maxFinanceAmount')"/>
+		</div>
+		<sw-number-field v-model:value="config['Credova.config.maxFinanceAmount']" step="1"/>
+	</div>
+
+	<div class="sw-settings-credova-form__label">
+		<sw-switch-field v-model:value="config['Credova.config.showAsLowAs']" :label="$tc('sw-settings-credova.label.showAsLowAs')"/>
+		<sw-help-text :text="$tc('sw-settings-credova.help.showAsLowAs')"/>
+	</div>
+</mt-card>
+
+<mt-card :title="$tc('sw-settings-credova.card.checkoutFlow')">
+	<sw-single-select v-model:value="config['Credova.config.checkoutFlow']" :options="checkoutFlowOptions" placeholder="Select Flow Type" :label="$tc('sw-settings-credova.label.checkoutFlow')"/>
+</mt-card>
+
+<mt-card :title="$tc('sw-settings-credova.card.popupConfig')">
+	<sw-single-select v-model:value="config['Credova.config.popupType']" :options="popupTypeOptions" placeholder="Select Popup Type" :label="$tc('sw-settings-credova.label.popupType')"/>
+</mt-card>

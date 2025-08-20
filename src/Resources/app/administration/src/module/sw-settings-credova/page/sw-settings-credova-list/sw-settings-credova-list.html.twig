@@ -1,0 +1,24 @@
+<sw-page headerBorderColor="#9AA8B5">
+    <template #smart-bar-header>
+      <div class="sw-page__smart-bar-header">
+        <h2>{{ $tc('sw-settings-credova.general.settings')}}</h2>
+        <mt-icon
+             name="regular-chevron-right-xs"
+             size="12px"
+        />
+        <h2>{{ $tc('sw-settings-credova.general.mainMenuItemGeneral')}}</h2>
+        </div>
+    </template>
+    <template #smart-bar-actions>
+        <sw-button
+            @click="onButtonClick"
+            variant="secondary"
+        >
+            {{ $tc('sw-settings-credova.general.saveConfigs') }}
+        </sw-button>
+    </template>
+
+    <template #content>
+        <sw-settings-credova-form ref="credovaForm" />
+    </template>
+</sw-page>
