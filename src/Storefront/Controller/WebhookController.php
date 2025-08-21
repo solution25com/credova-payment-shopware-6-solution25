@@ -4,31 +4,33 @@ namespace Credova\Storefront\Controller;
 
 use Credova\Service\OrderTransactionMapper\OrderTransactionMapper;
 use Psr\Log\LoggerInterface;
+use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Storefront\Controller\StorefrontController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use JsonException;
 
 #[Route(defaults: ['_routeScope' => ['storefront']])]
 class WebhookController extends StorefrontController
 {
-  private OrderTransactionStateHandler $transactionStateHandler;
-  private OrderTransactionMapper $orderTransactionMapper;
-  private LoggerInterface $logger;
+  private const STATUS_TO_ACTION = [
+    'Approved' => 'paid',
+    'Signed' => 'paid',
+    'Funded' => 'paid',
+    'Declined' => 'fail',
+    'Returned' => 'cancel',
+  ];
 
   public function __construct(
-    OrderTransactionStateHandler $transactionStateHandler,
-    OrderTransactionMapper $orderTransactionMapper,
-    LoggerInterface $logger
-  ) {
-    $this->transactionStateHandler = $transactionStateHandler;
-    $this->orderTransactionMapper = $orderTransactionMapper;
-    $this->logger = $logger;
-  }
+    private readonly OrderTransactionStateHandler $transactionStateHandler,
+    private readonly OrderTransactionMapper       $orderTransactionMapper,
+    private readonly LoggerInterface              $logger
+  )
+  {}
 
   #[Route(
     path: '/credova/webhook',
@@ -37,90 +39,86 @@ class WebhookController extends StorefrontController
   )]
   public function webhook(Request $request, SalesChannelContext $context): Response
   {
-    $payload = json_decode($request->getContent(), true);
+    $swContext = $context->getContext();
 
-    if (empty($payload['publicId'])) {
-      $this->logger->warning('Credova webhook missing publicId', [
-        'payload' => $payload
-      ]);
+    $payload = $this->parsePayload($request);
+    if ($payload === null) {
+      return $this->respond(false, 'Invalid JSON payload');
+    }
 
-      return new JsonResponse([
-        'success' => false,
-        'message' => 'Missing publicId'
-      ], Response::HTTP_OK);
+    $publicId = $payload['publicId'] ?? null;
+    if ($publicId === null || $publicId === '') {
+      $this->logger->warning('Credova webhook missing publicId', ['payload' => $payload]);
+      return $this->respond(false, 'Missing publicId');
     }
 
     try {
-      $order = $this->orderTransactionMapper->findOrderByCredovaPublicId(
-        $payload['publicId'],
-        $context->getContext()
-      );
-
-      if (!$order) {
+      $order = $this->orderTransactionMapper->findOrderByCredovaPublicId($publicId, $swContext);
+      if ($order === null) {
         $this->logger->warning('Credova webhook could not match order', [
-          'publicId' => $payload['publicId'],
-          'payload' => $payload
+          'publicId' => $publicId,
+          'payload' => $payload,
         ]);
-
-        return new JsonResponse([
-          'success' => false,
-          'message' => 'Order not found for publicId',
-        ], Response::HTTP_OK);
+        return $this->respond(false, 'Order not found for publicId');
       }
 
-      $this->orderTransactionMapper->updateCredovaFieldsFromWebhook(
-        $order,
-        $context->getContext(),
-        $payload
-      );
+      $this->orderTransactionMapper->updateCredovaFieldsFromWebhook($order, $swContext, $payload);
 
-      $transactionId = $order->getTransactions()->first()->getId();
+      $transactionId = $this->getFirstTransactionId($order);
+      if ($transactionId === null) {
+        $this->logger->warning('Credova webhook: order has no transactions', [
+          'orderId' => $order->getId(),
+          'payload' => $payload,
+        ]);
+        return $this->respond(false, 'Order has no transactions');
+      }
+
       $status = $payload['status'] ?? null;
+      $actionMethod = $status !== null ? (self::STATUS_TO_ACTION[$status] ?? null) : null;
 
-      switch ($status) {
-        case 'Approved':
-        case 'Signed':
-        $this->transactionStateHandler->paid($transactionId, $context->getContext());
-//        $this->transactionStateHandler->process($transactionId, $context->getContext());
-          break;
-
-        case 'Funded':
-          $this->transactionStateHandler->paid($transactionId, $context->getContext());
-          break;
-
-        case 'Declined':
-          $this->transactionStateHandler->fail($transactionId, $context->getContext());
-          break;
-
-        case 'Returned':
-          $this->transactionStateHandler->cancel($transactionId, $context->getContext());
-          break;
-
-        default:
-          $this->logger->info('Credova webhook received unhandled status', [
-            'status' => $status,
-            'payload' => $payload
-          ]);
-          break;
+      if ($actionMethod !== null) {
+        $this->transactionStateHandler->{$actionMethod}($transactionId, $swContext);
+      } else {
+        $this->logger->info('Credova webhook received unhandled status', [
+          'status' => $status,
+          'payload' => $payload,
+        ]);
       }
 
-      return new JsonResponse([
-        'success' => true,
-        'message' => 'Webhook processed successfully',
-        'status' => $status,
-      ], Response::HTTP_OK);
-
+      return $this->respond(true, 'Webhook processed');
     } catch (\Throwable $e) {
       $this->logger->error('Credova webhook processing failed', [
         'error' => $e->getMessage(),
         'trace' => $e->getTraceAsString(),
-        'payload' => $payload
+        'payload' => $payload,
       ]);
-
-      return new JsonResponse([
-        'success' => false,
-        'message' => 'Internal error while processing webhook',
-      ], Response::HTTP_OK);
+      return $this->respond(false, 'Webhook processing failed');
     }
   }
+
+  private function parsePayload(Request $request): ?array
+  {
+    try {
+      /** @var mixed $decoded */
+      $decoded = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+      return is_array($decoded) ? $decoded : null;
+    } catch (JsonException) {
+      return null;
+    }
+  }
+
+  private function getFirstTransactionId(OrderEntity $order): ?string
+  {
+    return $order->getTransactions()?->first()?->getId();
+  }
+
+  private function respond(bool $ok, string $message): JsonResponse
+  {
+    // Always return 200 OK as required by Credova
+    return new JsonResponse(
+      ['success' => $ok, 'message' => $message],
+      Response::HTTP_OK
+    );
+  }
+
 }

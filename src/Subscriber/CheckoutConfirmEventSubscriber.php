@@ -6,7 +6,6 @@ use Credova\Service\ConfigService;
 use Credova\Gateways\CredovaHandler;
 use Credova\Service\PaymentClientApi;
 use Credova\Storefront\Struct\CheckoutTemplateCustomData;
-use NMIPayment\Gateways\CreditCard;
 use Shopware\Core\Checkout\Payment\PaymentMethodEntity;
 use Shopware\Storefront\Page\Checkout\Confirm\CheckoutConfirmPageLoadedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -30,6 +29,11 @@ class CheckoutConfirmEventSubscriber implements EventSubscriberInterface
 
   public function addPaymentMethodSpecificFormFields(CheckoutConfirmPageLoadedEvent $event): void
   {
+    $selectedPaymentGateway = $event->getSalesChannelContext()->getPaymentMethod();
+    if ($selectedPaymentGateway->getHandlerIdentifier() !== CredovaHandler::class) {
+      return;
+    }
+
     $minFinanceAmount = $this->configs->getConfig('minFinanceAmount', $event->getSalesChannelContext()->getSalesChannelId());
     $maxFinanceAmount = $this->configs->getConfig('maxFinanceAmount', $event->getSalesChannelContext()->getSalesChannelId());
     $pageObject = $event->getPage();

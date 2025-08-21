@@ -23,38 +23,17 @@ class ProductPageSubscriber implements EventSubscriberInterface
   public static function getSubscribedEvents(): array
   {
     return [
-      ProductPageLoadedEvent::class => 'addPaymentMethodSpecificFormFields',
       'sales_channel.' . ProductEvents::PRODUCT_LOADED_EVENT => ['onProductsLoaded'],
     ];
-  }
-
-  public function addPaymentMethodSpecificFormFields(ProductPageLoadedEvent $event): void{
-    $minFinanceAmount = $this->configs->getConfig('minFinanceAmount', $event->getSalesChannelContext()->getSalesChannelId());
-    $maxFinanceAmount = $this->configs->getConfig('maxFinanceAmount', $event->getSalesChannelContext()->getSalesChannelId());
-    $pageObject = $event->getPage();
-    $templateVariables = new CheckoutTemplateCustomData();
-
-    $templateVariables->assign([
-      'template' => '@Storefront/credova-pages/credova-product-page.html.twig',
-      'page' => $pageObject,
-      'token' => 'pass here',
-      'publicId'  => 'pass here',
-      'minFinanceAmount'=> $minFinanceAmount,
-      'maxFinanceAmount'=> $maxFinanceAmount      
-    ]);
-
-    $pageObject->addExtension(
-      CheckoutTemplateCustomData::EXTENSION_NAME,
-      $templateVariables
-    );
   }
 
   public function onProductsLoaded(SalesChannelEntityLoadedEvent $event): void
   {
       $salesChannelId = $event->getSalesChannelContext()->getSalesChannelId();
+      $mode = $this->configs->getConfig('environment', $salesChannelId);
       $minFinanceAmount = (float) $this->configs->getConfig('minFinanceAmount', $salesChannelId);
       $maxFinanceAmount = (float) $this->configs->getConfig('maxFinanceAmount', $salesChannelId);
-
+      $storeCode = $this->configs->getConfig('storeCode', $salesChannelId);
       foreach ($event->getEntities() as $entity) {
           if (!$entity instanceof SalesChannelProductEntity) {
               continue;
@@ -63,6 +42,8 @@ class ProductPageSubscriber implements EventSubscriberInterface
           $entity->addExtension('credovaFinance', new ArrayStruct([
               'minFinanceAmount' => $minFinanceAmount,
               'maxFinanceAmount' => $maxFinanceAmount,
+              'storeCode' => $storeCode,
+              'mode' => $mode,
           ]));
       }
   }

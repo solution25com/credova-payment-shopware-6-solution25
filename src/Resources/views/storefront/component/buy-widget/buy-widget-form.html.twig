@@ -2,16 +2,21 @@
 
 {% block buy_widget_buy_container %}
 	{% set unitPrice = page.product.calculatedPrice.unitPrice ?? (page.product.calculatedCheapestPrice.unitPrice ?? null) %}
-	{% set minFinanceAmount = page.extensions.credova_payment.minFinanceAmount %}
-	{% set maxFinanceAmount = page.extensions.credova_payment.maxFinanceAmount %}
+	{% set minFinanceAmount = page.product.extensions.credovaFinance.minFinanceAmount %}
+	{% set maxFinanceAmount = page.product.extensions.credovaFinance.maxFinanceAmount %}
+	{% set mode = page.product.extensions.credovaFinance.mode %}
+	{% set storeCode = page.product.extensions.credovaFinance.storeCode %}
+
 
 	{% if page.extensions.credova_payment is defined
             and unitPrice is not null
             and unitPrice >= minFinanceAmount
             and unitPrice <= maxFinanceAmount %}
-		<div 
+		<div    id="credova-pay-later-container"
             data-credova-pay-later="true" 
-            data-credova-prequal-amount="{{ unitPrice }}" 
+            data-credova-prequal-amount="{{ unitPrice }}"
+						data-credova-store-code="{{ storeCode }}"
+						data-credova-mode="{{ mode }}"
             data-credova-button-selector="#payLaterButton" 
             data-credova-form-selector='form[name="confirmOrderForm"]'>
 			<button id="payLaterButton" class="btn btn-primary my-3" type="button" data-credova-prequal-button>

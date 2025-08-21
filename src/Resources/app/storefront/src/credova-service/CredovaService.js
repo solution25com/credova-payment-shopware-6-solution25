@@ -14,7 +14,7 @@ export default class CredovaService {
         });
     }
 
-    checkout() {
-        this.configure();
-    }
+    // checkout() {
+    //     this.configure();
+    // }
 }

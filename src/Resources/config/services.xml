@@ -40,7 +40,6 @@
 
         <service id="Credova\Storefront\Controller\WebhookController" public="true">
             <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
-            <argument type="service" id="order.repository" />
             <argument type="service" id="Credova\Service\OrderTransactionMapper\OrderTransactionMapper"/>
             <argument type="service" id="CredovaPayment.logger"/>
             <call method="setContainer">

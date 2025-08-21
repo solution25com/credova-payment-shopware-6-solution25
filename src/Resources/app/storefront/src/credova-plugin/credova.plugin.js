@@ -3,15 +3,22 @@ import Plugin from 'src/plugin-system/plugin.class';
 export default class CredovaPlugin extends Plugin {
     static options = {
         scriptSrc: 'https://plugin.credova.com/plugin.min.js',
-        environment: 'Sandbox',
-        storeCode: 'JRH000',
+        environment: '',
+        storeCode: null,
         buttonSelector: '#payLaterButton',
         formSelector: 'form[name="confirmOrderForm"]',
         prequalAmount: null,
         checkoutId: null
     };
 
+    _registerElement(){
+        this.parentWrapper = document.getElementById('credova-pay-later-container');
+        this.options.storeCode = this.parentWrapper.getAttribute('data-credova-store-code');
+    }
+
     init() {
+        this._registerElement();
+        console.log(this.options.storeCode)
         this._hydrateOptionsFromDataset();
 
         this._ensureScript()
@@ -24,13 +31,14 @@ export default class CredovaPlugin extends Plugin {
 
     _hydrateOptionsFromDataset() {
         const ds = this.el.dataset || {};
-    
+
         this.options.storeCode = ds.credovaStore || this.options.storeCode;
         this.options.environment = ds.credovaEnvironment || this.options.environment;
         this.options.prequalAmount = this._toNumber(ds.credovaPrequalAmount, this.options.prequalAmount);
         this.options.checkoutId = ds.credovaCheckoutId || this.options.checkoutId;
         this.options.buttonSelector = ds.credovaButtonSelector || this.options.buttonSelector;
         this.options.formSelector = ds.credovaFormSelector || this.options.formSelector;
+
     }
     
 
@@ -70,6 +78,7 @@ export default class CredovaPlugin extends Plugin {
             environment: envEnum,
             store: this.options.storeCode
         });
+
     }
 
     _bindEvents() {
