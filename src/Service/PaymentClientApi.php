@@ -6,8 +6,6 @@ namespace Credova\Service;
 use Credova\Library\Constants\EnvironmentUrl;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
-use Nyholm\Psr7\Response;
-use Shopware\Core\Framework\Uuid\Uuid;
 
 class PaymentClientApi extends Endpoints
 {
@@ -90,6 +88,21 @@ class PaymentClientApi extends Endpoints
     return $response->getBody()->getContents();
   }
 
+  public function returnApplication(string $publicId, array $data = []): string
+  {
+    $this->setupClient();
+    $endpoint = Endpoints::buildReturnApplicationUrl($publicId);
+
+    $response = $this->client->request($endpoint['method'], $endpoint['url'], [
+      'headers' => [
+        'Content-Type'  => 'application/json',
+        'Authorization' => 'Bearer ' . $this->requestAuthToken(),
+      ],
+      'json' => $data,
+    ]);
+
+    return $response->getBody()->getContents();
+  }
 
   private function setupClient(string $salesChannelId = ''): void
   {

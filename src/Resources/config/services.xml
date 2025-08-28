@@ -10,12 +10,19 @@
             <argument type="service" id="Credova\Service\PaymentClientApi" />
             <argument type="service" id="Credova\Service\OrderTransactionMapper\OrderTransactionMapper"/>
             <argument type="service" id="Credova\Service\ConfigService" />
+            <argument type="service" id="CredovaPayment.logger"/>
             <tag name="shopware.payment.method"/>
         </service>
 
         <service id="Credova\Subscriber\CheckoutConfirmEventSubscriber">
             <argument type="service" id="Credova\Service\PaymentClientApi" />
             <argument type="service" id="Credova\Service\ConfigService" />
+            <tag name="kernel.event_subscriber"/>
+        </service>
+
+        <service id="Credova\Subscriber\RefundEventSubscriber">
+            <argument type="service" id="order_transaction.repository" />
+            <argument type="service" id="Credova\Service\PaymentClientApi" />
             <tag name="kernel.event_subscriber"/>
         </service>
 

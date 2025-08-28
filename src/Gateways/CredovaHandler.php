@@ -14,6 +14,7 @@ use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\Struct\Struct;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Shopware\Core\Checkout\Payment\PaymentException;
 
 class CredovaHandler extends AbstractPaymentHandler
 {
@@ -77,7 +78,7 @@ class CredovaHandler extends AbstractPaymentHandler
 
     if (!$response['publicId']) {
       $this->transactionStateHandler->fail($transaction->getOrderTransactionId(), $context);
-      throw new \RuntimeException('Credova API returned an error while processing payment');
+      throw new \Exception('Credova API returned an error while processing payment');
     }
 
     $this->orderTransactionMapper->setCredovaCustomFieldFromOrder(
