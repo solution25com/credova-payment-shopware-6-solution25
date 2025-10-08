@@ -6,6 +6,7 @@ use Credova\Service\ConfigService;
 use Credova\Service\Endpoints;
 use Credova\Service\OrderTransactionMapper\OrderTransactionMapper;
 use Credova\Service\PaymentClientApi;
+use DateTime;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\AbstractPaymentHandler;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\PaymentHandlerType;
@@ -14,7 +15,6 @@ use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\Struct\Struct;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Shopware\Core\Checkout\Payment\PaymentException;
 
 class CredovaHandler extends AbstractPaymentHandler
 {
@@ -42,39 +42,43 @@ class CredovaHandler extends AbstractPaymentHandler
     $stateFull = $billingAddress->getCountryState()->getShortCode();
     $parts = explode('-', $stateFull);
     $stateShort = end($parts);
+    $birthday = $order->getOrderCustomer()->getCustomer()->getBirthday();
+    $birthdayString = $birthday instanceof \DateTimeInterface ? $birthday->format('Y-m-d') : null;
 
-    $body = [
-      'storeCode' => $storeCode,
-      'firstName' => $billingAddress->getFirstName(),
-      'lastName' => $billingAddress->getLastName(),
-      'dateOfBirth' => '1983-04-01', // todo: default + 18 for now
-      'mobilePhone' => $billingAddress->getPhoneNumber(),
-      'email' => $order->getOrderCustomer()->getEmail(),
-      'referenceNumber' => $order->getOrderNumber(),
-      'redirectUrl' => $transaction->getReturnUrl(),
-      'cancelUrl' => $request->getSchemeAndHttpHost(),
+    if ($this->isValidDOB($birthdayString)) {
+      $body = [
+        'storeCode' => $storeCode,
+        'firstName' => $billingAddress->getFirstName(),
+        'lastName' => $billingAddress->getLastName(),
+        'dateOfBirth' => $birthdayString,
+        'mobilePhone' => $billingAddress->getPhoneNumber(),
+        'email' => $order->getOrderCustomer()->getEmail(),
+        'referenceNumber' => $order->getOrderNumber(),
+        'redirectUrl' => $transaction->getReturnUrl(),
+        'cancelUrl' => $request->getSchemeAndHttpHost(),
 
-      'address' => [
-        'street' => $billingAddress->getStreet(),
-        'city' => $billingAddress->getCity(),
-        'state' => $stateShort,
-        'zipCode' => $billingAddress->getZipCode(),
-      ],
+        'address' => [
+          'street' => $billingAddress->getStreet(),
+          'city' => $billingAddress->getCity(),
+          'state' => $stateShort,
+          'zipCode' => $billingAddress->getZipCode(),
+        ],
 
-      'products' => []
-    ];
-
-    foreach ($order->getLineItems() as $lineItem) {
-      $body['products'][] = [
-        'id' => $lineItem->getId(),
-        'description' => $lineItem->getLabel(),
-        'serialNumber' => $lineItem->getPayload()['productNumber'] ?? $lineItem->getId(),
-        'quantity' => (string)$lineItem->getQuantity(),
-        'value' => number_format($lineItem->getTotalPrice(), 2, '.', '')
+        'products' => []
       ];
-    }
 
-    $response = $this->paymentClientApi->createApplication($body, $salesChannelId, $callbackUrl);
+      foreach ($order->getLineItems() as $lineItem) {
+        $body['products'][] = [
+          'id' => $lineItem->getId(),
+          'description' => $lineItem->getLabel(),
+          'serialNumber' => $lineItem->getPayload()['productNumber'] ?? $lineItem->getId(),
+          'quantity' => (string)$lineItem->getQuantity(),
+          'value' => number_format($lineItem->getTotalPrice(), 2, '.', '')
+        ];
+      }
+
+      $response = $this->paymentClientApi->createApplication($body, $salesChannelId, $callbackUrl);
+    }
 
     if (!$response['publicId']) {
       $this->transactionStateHandler->fail($transaction->getOrderTransactionId(), $context);
@@ -94,4 +98,20 @@ class CredovaHandler extends AbstractPaymentHandler
 
   public function finalize(Request $request, PaymentTransactionStruct $transaction, Context $context): void
   {}
+  private function isValidDOB(?string $dob): bool
+  {
+    if (!$dob) {
+      return false;
+    }
+
+    try {
+      $dobDate = new DateTime($dob);
+      $now = new DateTime();
+      $age = $now->diff($dobDate)->y;
+
+      return $dobDate < $now && $age >= 18;
+    } catch (\Exception $e) {
+      return false;
+    }
+  }
 }

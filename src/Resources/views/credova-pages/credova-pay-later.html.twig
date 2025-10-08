@@ -1,10 +1,28 @@
-{% if page.extensions.credova_payment %}
+{% if page.extensions.credova_payment is defined %}
+  {% set credova = page.extensions.credova_payment %}
+
+  <div class="credova-accordion-container">
+    {% if credova.errors is defined and credova.errors|length > 0 %}
+      <button type="button" class="accordion"> ⚠️ Credova Validation</button>
+      <div class="panel">
+        <ul>
+          {% for field, message in credova.errors %}
+            <li><strong>{{ field|capitalize }}:</strong> {{ message }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  </div>
+
   <template credova-payment-pay-later></template>
 
-  <div id="credova-payment-pay-later" data-credova-payment-pay-later="true"
-       data-public-id="{{ page.extensions.credova_payment.publicId }}"
-       data-store-code="{{ page.extensions.credova_payment.storeCode }}"
-       data-mode="{{ page.extensions.credova_payment.mode }}"
+  <div id="credova-payment-pay-later"
+       data-credova-payment-pay-later="true"
+       data-store-code="{{ credova.storeCode }}"
+       data-mode="{{ credova.mode }}"
+          {% if credova.errors is defined %}
+            data-errors='{{ credova.errors|json_encode }}'
+          {% endif %}
   >
     <script src="https://plugin.credova.com/plugin.min.js"></script>
   </div>

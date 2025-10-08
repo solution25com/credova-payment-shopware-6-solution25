@@ -1,0 +1,27 @@
+{% sw_extends '@Storefront/storefront/page/checkout/confirm/index.html.twig' %}
+
+{% block page_checkout_confirm_form_submit %}
+    {% set credova = page.extensions.credova_payment ?? null %}
+
+    {% if credova and credova.errors is defined and credova.errors|length > 0 %}
+        {% if credova.errors|length == 1 and credova.errors['Cart Amount'] is defined %}
+            <div class="credova-error-box">
+                <strong>⚠️ {{ credova.errors['Cart Amount'] }}</strong>
+            </div>
+        {% else %}
+            <div class="credova-error-box">
+                <strong> ⚠️ We found issues with your billing information:</strong>
+
+                <ul class="credova-error-list">
+                    {% for field, message in credova.errors %}
+                        <li><strong>{{ field|capitalize }}:</strong> {{ message }}</li>
+                    {% endfor %}
+                </ul>
+
+                <p>Please go back and correct the information before continuing using Credova payment.</p>
+            </div>
+        {% endif %}
+    {% else %}
+        {{ parent() }}
+    {% endif %}
+{% endblock %}

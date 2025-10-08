@@ -15,9 +15,14 @@
         </service>
 
         <service id="Credova\Subscriber\CheckoutConfirmEventSubscriber">
-            <argument type="service" id="Credova\Service\PaymentClientApi" />
+            <argument type="service" id="Credova\Service\CustomerDataValidator"/>
             <argument type="service" id="Credova\Service\ConfigService" />
             <tag name="kernel.event_subscriber"/>
+        </service>
+
+        <service id="Credova\Service\CustomerDataValidator">
+            <argument type="service" id="customer.repository" />
+            <argument type="service" id="Credova\Service\ConfigService" />
         </service>
 
         <service id="Credova\Subscriber\RefundEventSubscriber">

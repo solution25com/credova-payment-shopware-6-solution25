@@ -4,20 +4,20 @@ namespace Credova\Subscriber;
 
 use Credova\Service\ConfigService;
 use Credova\Gateways\CredovaHandler;
+use Credova\Service\CustomerDataValidator;
 use Credova\Service\PaymentClientApi;
 use Credova\Storefront\Struct\CheckoutTemplateCustomData;
-use Shopware\Core\Checkout\Payment\PaymentMethodEntity;
 use Shopware\Storefront\Page\Checkout\Confirm\CheckoutConfirmPageLoadedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class CheckoutConfirmEventSubscriber implements EventSubscriberInterface
 {
-  private PaymentClientApi $paymentClient;
+  private CustomerDataValidator $customerDataValidator;
   private ConfigService $configs;
 
-  public function __construct(PaymentClientApi $paymentClient, ConfigService $configs)
+  public function __construct(CustomerDataValidator $customerDataValidator, ConfigService $configs)
   {
-    $this->paymentClient = $paymentClient;
+    $this->customerDataValidator = $customerDataValidator;
     $this->configs = $configs;
   }
   public static function getSubscribedEvents(): array
@@ -34,44 +34,40 @@ class CheckoutConfirmEventSubscriber implements EventSubscriberInterface
       return;
     }
 
-    $minFinanceAmount = $this->configs->getConfig('minFinanceAmount', $event->getSalesChannelContext()->getSalesChannelId());
-    $maxFinanceAmount = $this->configs->getConfig('maxFinanceAmount', $event->getSalesChannelContext()->getSalesChannelId());
+    $salesChannelId = $event->getSalesChannelContext()->getSalesChannelId();
+    $context = $event->getSalesChannelContext()->getContext();
     $pageObject = $event->getPage();
     $cartAmount = $pageObject->getCart()->getPrice()->getTotalPrice();
 
-    if ($cartAmount < $minFinanceAmount || $cartAmount > $maxFinanceAmount) {
-      $paymentMethods = $pageObject->getPaymentMethods();
-      $filteredPaymentMethods = $paymentMethods->filter(function (PaymentMethodEntity $paymentMethod) {
-        return $paymentMethod->getHandlerIdentifier() !== CredovaHandler::class;
-      });
-      $pageObject->setPaymentMethods($filteredPaymentMethods);
-      return;
+    $customerId = $event->getSalesChannelContext()->getCustomer()?->getId();
+    $errors = [];
+
+    if (!$this->customerDataValidator->validateCredovaPayment($cartAmount, $salesChannelId)) {
+      $errors['Cart Amount'] = 'Credova is not possible to proceed on this cart amount.';
+    } else {
+      $errors = $this->customerDataValidator->validate($customerId, $context);
     }
 
-    $mode = $this->configs->getConfig('environment', $event->getSalesChannelContext()->getSalesChannelId());
-    $storeDataJson = $this->paymentClient->getStore();
-    $storeData = json_decode($storeDataJson, true);
-    $publicId = $storeData[0]['publicId'] ?? null;
-    $storeCode = $this->configs->getConfig('storeCode', $event->getSalesChannelContext()->getSalesChannelId());
+    $mode = $this->configs->getConfig('environment', $salesChannelId);
+    $storeCode = $this->configs->getConfig('storeCode', $salesChannelId);
 
-    $salesChannelContext = $event->getSalesChannelContext();
-    $selectedPaymentGateway = $salesChannelContext->getPaymentMethod();
     $templateVariables = new CheckoutTemplateCustomData();
+    $templateVariables->assign([
+      'template' => '@Storefront/credova-pages/credova-pay-later.html.twig',
+      'gateway' => 'CredovaHandler',
+      'mode' => $mode,
+      'storeCode' => $storeCode,
+    ]);
 
-    if($selectedPaymentGateway->getHandlerIdentifier() == CredovaHandler::class){
-
+    if (!empty($errors)) {
       $templateVariables->assign([
-        'template' => '@Storefront/credova-pages/credova-pay-later.html.twig',
-        'gateway' => 'CredovaHandler',
-        'publicId' => $publicId,
-        'mode' => $mode,
-        'storeCode' => $storeCode
+        'errors' => $errors
       ]);
-
-      $pageObject->addExtension(
-        CheckoutTemplateCustomData::EXTENSION_NAME,
-        $templateVariables
-      );
     }
+
+    $pageObject->addExtension(
+      CheckoutTemplateCustomData::EXTENSION_NAME,
+      $templateVariables
+    );
   }
 }

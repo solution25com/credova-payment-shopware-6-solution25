@@ -12,9 +12,9 @@ export default class PayLaterPlugin extends window.PluginBaseClass {
         this.confirmOrderForm = document.forms[this.options.confirmFormId];
         this.parentWrapper = document.getElementById(this.options.parentWrapperId);
 
-        this.publicId = this.parentWrapper.getAttribute('data-public-id');
-        this.options.storeCode = this.parentWrapper.getAttribute('data-store-code');
-        this.options.environment = this.parentWrapper.getAttribute('data-mode');
+        this.publicId = this.parentWrapper?.getAttribute('data-public-id');
+        this.options.storeCode = this.parentWrapper?.getAttribute('data-store-code');
+        this.options.environment = this.parentWrapper?.getAttribute('data-mode');
 
         this.credovaService = new CredovaService({
             environment: this.options.environment,
@@ -24,26 +24,25 @@ export default class PayLaterPlugin extends window.PluginBaseClass {
     }
 
     init() {
-        // this._registerElements();
-        // this._registerEvents();
+        this._registerElements();
+        this._registerEvents();
     }
 
     _registerEvents() {
-        if (!this.confirmOrderForm) {
-            console.warn('PayLaterPlugin: confirm form not found');
-            return;
-        }
+        this._initAccordion();
+    }
 
-        this.confirmOrderForm.addEventListener('submit', (e) => {
-            e.preventDefault();
+    _initAccordion() {
+        const accordions = document.querySelectorAll('.accordion');
 
-            this.credovaService.checkout().then((completed) => {
-                if (completed) {
-                    console.log('Checkout completed, submitting order');
-                    this.confirmOrderForm.submit();
-                } else {
-                    console.log('Checkout was closed, order not submitted');
-                }
+        accordions.forEach(button => {
+            button.addEventListener('click', function () {
+                this.classList.toggle('active');
+
+                const panel = this.nextElementSibling;
+                const isOpen = panel.style.display === 'block';
+
+                panel.style.display = isOpen ? 'none' : 'block';
             });
         });
     }

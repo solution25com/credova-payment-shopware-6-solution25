@@ -1,0 +1,89 @@
+.accordion {
+  background-color: #eee;
+  color: #444;
+  cursor: pointer;
+  padding: 14px 18px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+  transition: background-color 0.2s ease;
+  margin-top: 5px;
+  border-radius: 4px;
+  position: relative;
+}
+
+/* Arrow icon */
+.accordion::after {
+  content: '\25BC'; /* ▼ Down arrow */
+  font-size: 12px;
+  color: #777;
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.3s ease;
+}
+
+/* Rotate icon when active */
+.accordion.active::after {
+  transform: translateY(-50%) rotate(180deg); /* ▲ Up arrow */
+}
+
+.accordion.active,
+.accordion:hover {
+  background-color: #ccc;
+}
+
+.panel {
+  padding: 0 18px;
+  background-color: white;
+  display: none;
+  overflow: hidden;
+  border-left: 2px solid #ccc;
+  border-right: 2px solid #ccc;
+  border-bottom: 2px solid #ccc;
+  border-radius: 0 0 4px 4px;
+  margin-bottom: 10px;
+}
+
+.panel ul {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.panel li {
+  margin-bottom: 5px;
+}
+
+.credova-accordion-container {
+  margin: 20px 0;
+}
+
+ .credova-error-box {
+   background-color: #fff3cd;
+   color: #856404;
+   border: 1px solid #ffeeba;
+   padding: 16px 20px;
+   border-radius: 6px;
+   margin: 20px 0;
+   font-family: Arial, sans-serif;
+   font-size: 15px;
+ }
+
+.credova-error-box strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.credova-error-list {
+  margin-top: 10px;
+  padding-left: 18px;
+}
+
+.credova-error-list li {
+  margin-bottom: 6px;
+}
