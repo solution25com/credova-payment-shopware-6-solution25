@@ -3,5 +3,9 @@ import PayLaterPlugin from "./credova-plugin/pay-later.plugin";
 
 const PluginManager = window.PluginManager;
 
-PluginManager.register('CredovaPlugin', CredovaPlugin, '[data-credova-pay-later]');
+PluginManager.register(
+    'CredovaPlugin',
+    CredovaPlugin,
+    '[data-credova="1"]'
+);
 PluginManager.register('PayLaterPlugin', PayLaterPlugin, '[credova-payment-pay-later]');

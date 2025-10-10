@@ -1,5 +1,4 @@
 {% sw_extends '@Storefront/storefront/component/product/card/price-unit.html.twig' %}
-
 {% block component_product_box_price %}
 	{% set unitPrice   = product.calculatedPrice.unitPrice %}
 	{% set financeExt  = product.extensions.credovaFinance ?? {} %}
@@ -35,5 +34,5 @@
 		</div>
 	{% endif %}
 
-	<script src="https://plugin.credova.com/plugin.min.js" defer></script>
+	<script src="https://plugin.credova.com/plugin.min.js"></script>
 {% endblock %}
