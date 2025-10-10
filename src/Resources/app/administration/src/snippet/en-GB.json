@@ -1,14 +1,17 @@
 {
-    "sw-settings":{
-        "index":{
-            "tabCredova": "Credova"
-        }
-    },
-    "sw-settings-credova": {
+  "sw-settings":{
+    "index":{
+      "tabCredova": "Credova"
+    }
+  },
+
+  "sw-settings-credova": {
     "label": {
+      "title":"Configuration",
       "minFinanceAmount": "Minimum Finance Amount ($)",
       "maxFinanceAmount": "Maximum Finance Amount ($)",
       "showAsLowAs": "Enable 'As Low As' Display",
+      "showCredovaLogo": "Hide Credova Logo",
       "checkoutFlow": "Checkout Flow Type",
       "popupType": "Popup Type",
       "salesChannelSelect": "Sales Channel"
@@ -16,13 +19,15 @@
     "help": {
       "minFinanceAmount": "Credova will not display on products less than this dollar amount.",
       "maxFinanceAmount": "Credova will not display on products greater than this dollar amount.",
-      "showAsLowAs": "Show Credova on product listing pages (PLP) when price parameters are met."
+      "showAsLowAs": "Show Credova on product listing pages (PLP) when price parameters are met.",
+      "logoForcedByCustomText": "Based on Credova documentation and development: when you add custom text in the data-message field, the logo will always be hidden."
     },
     "card": {
       "salesChannelSettings": "Sales Channel Settings",
       "displayRules": "Display Rules",
       "checkoutFlow": "Checkout Flow",
-      "popupConfig": "Popup Configuration"
+      "popupConfig": "Popup Configuration",
+      "customText": "Enter a custom message"
     },
     "notification": {
       "loadError": {
@@ -53,12 +58,11 @@
         "order_first": "Order First"
       }
     },
-      "general": {
-        "mainMenuItemGeneral": "Credova payment configuration",
-        "descriptionTextModule": "Configure Credova settings",
-        "saveConfigs": "Save Configurations",
-        "settings": "Settings"
-      }
+    "general": {
+      "mainMenuItemGeneral": "Credova payment configuration",
+      "descriptionTextModule": "Configure Credova settings",
+      "saveConfigs": "Save Configurations",
+      "settings": "Settings"
     }
   }
-  
+}

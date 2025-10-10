@@ -40,6 +40,10 @@
             <argument type="service" id="Credova\Service\ConfigService" />
         </service>
 
+        <service id="Credova\Service\PaymentTransactionStateHandler\CredovaTransactionStateHandler">
+            <argument type="service" id="Shopware\Core\System\StateMachine\StateMachineRegistry"/>
+        </service>
+
         <service id="Credova\Service\ConfigService">
             <argument id="Shopware\Core\System\SystemConfig\SystemConfigService" type="service"/>
         </service>
@@ -52,6 +56,7 @@
 
         <service id="Credova\Storefront\Controller\WebhookController" public="true">
             <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
+            <argument type="service" id="Credova\Service\PaymentTransactionStateHandler\CredovaTransactionStateHandler" />
             <argument type="service" id="Credova\Service\OrderTransactionMapper\OrderTransactionMapper"/>
             <argument type="service" id="CredovaPayment.logger"/>
             <call method="setContainer">

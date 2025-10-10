@@ -1,8 +1,68 @@
 {
-    "swag-example": {
+    "sw-settings": {
+        "index": {
+            "tabCredova": "Credova"
+        }
+    },
+
+    "sw-settings-credova": {
+        "label": {
+            "title": "Konfiguration",
+            "minFinanceAmount": "Mindestfinanzierungsbetrag (€)",
+            "maxFinanceAmount": "Höchstfinanzierungsbetrag (€)",
+            "showAsLowAs": "Anzeige 'Ab monatlich' aktivieren",
+            "showCredovaLogo": "Credova-Logo ausblenden",
+            "checkoutFlow": "Checkout-Flow-Typ",
+            "popupType": "Popup-Typ",
+            "salesChannelSelect": "Verkaufskanal"
+        },
+        "help": {
+            "minFinanceAmount": "Credova wird bei Produkten unter diesem Betrag nicht angezeigt.",
+            "maxFinanceAmount": "Credova wird bei Produkten über diesem Betrag nicht angezeigt.",
+            "showAsLowAs": "Zeigt Credova auf Produktlisten-Seiten (PLP), wenn die Preisbedingungen erfüllt sind.",
+            "logoForcedByCustomText": "Laut Credova-Dokumentation: Wenn Sie einen benutzerdefinierten Text im Datenfeld 'data-message' hinzufügen, wird das Logo immer ausgeblendet."
+        },
+        "card": {
+            "salesChannelSettings": "Verkaufskanal-Einstellungen",
+            "displayRules": "Anzeigeregeln",
+            "checkoutFlow": "Checkout-Flow",
+            "popupConfig": "Popup-Konfiguration",
+            "customText": "Benutzerdefinierte Nachricht eingeben"
+        },
+        "notification": {
+            "loadError": {
+                "title": "Fehler",
+                "message": "Konfiguration konnte nicht geladen werden."
+            },
+            "saveSuccess": {
+                "title": "Erfolg",
+                "message": "Konfigurationen wurden erfolgreich gespeichert."
+            },
+            "saveError": {
+                "title": "Fehler",
+                "message": "Konfigurationen konnten nicht gespeichert werden."
+            },
+            "validation": {
+                "title": "Validierungsfehler",
+                "message": "Mindest- und Höchstfinanzierungsbetrag müssen zwischen 300 € und 5000 € liegen."
+            }
+        },
+        "options": {
+            "popupType": {
+                "iframe": "Iframe-Popup",
+                "popup": "Popup"
+            },
+            "checkoutFlow": {
+                "auth_capture": "Auth Capture",
+                "auth_only": "Nur Authentifizierung",
+                "order_first": "Zuerst Bestellung"
+            }
+        },
         "general": {
-            "mainMenuItemGeneral": "My custom module",
-            "descriptionTextModule": "Manage this custom module here"
+            "mainMenuItemGeneral": "Credova-Zahlungskonfiguration",
+            "descriptionTextModule": "Credova-Einstellungen konfigurieren",
+            "saveConfigs": "Konfigurationen speichern",
+            "settings": "Einstellungen"
         }
     }
 }

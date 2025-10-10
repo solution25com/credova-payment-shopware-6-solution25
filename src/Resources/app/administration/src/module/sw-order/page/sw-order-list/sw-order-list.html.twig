@@ -1,0 +1,16 @@
+{% block sw_order_list_grid_columns_transaction_state %}
+    <template #column-transactions.last().stateMachineState.name="{ item }">
+        <div
+                v-if="item.transactions && item.transactions[0]"
+                class="sw-order-list__state"
+        >
+            <sw-color-badge
+                    v-if="item.transactions && item.transactions[0]"
+                    :color="getVariantFromPaymentState(item)"
+                    :class="getStatusBadgeClass(transaction(item).stateMachineState.technicalName)"
+                    rounded
+            />
+            {{ transaction(item).stateMachineState.translated.name }}
+        </div>
+    </template>
+{% endblock %}

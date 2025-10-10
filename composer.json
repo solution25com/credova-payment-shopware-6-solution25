@@ -2,7 +2,7 @@
     "name": "credova/credova",
     "description": "credova/credova",
     "type": "shopware-platform-plugin",
-    "version": "1.0.0",
+    "version": "1.1.5",
     "license": "MIT",
     "require": {
         "shopware/core": "~6.6.0"

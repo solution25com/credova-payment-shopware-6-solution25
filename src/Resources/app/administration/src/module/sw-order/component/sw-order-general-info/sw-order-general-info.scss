@@ -1,0 +1,26 @@
+.sw-order-general-info__order-state
+.sw-order-state-select-v2.sw-order-state__credova-approved-select
+.sw-block-field__block {
+  background-color: #e3f3ff;
+  border: none;
+}
+
+.sw-order-general-info__order-state
+.sw-order-state-select-v2.sw-order-state__credova-signed-select
+.sw-block-field__block {
+  background-color: #e6f7d9;
+  border: none;
+}
+
+.sw-order-general-info__order-state
+.sw-order-state-select-v2.sw-order-state__credova-approved-select
+.sw-single-select__selection-input.is--expanded {
+  background-color: #B3E5FC;
+}
+
+.sw-order-general-info__order-state
+.sw-order-state-select-v2.sw-order-state__credova-signed-select
+.sw-single-select__selection-input.is--expanded {
+  background-color: #e6f7d9;
+  color: #81ed88;
+}

@@ -3,8 +3,6 @@
 namespace Credova\Subscriber;
 
 use Credova\Service\ConfigService;
-use Credova\Storefront\Struct\CheckoutTemplateCustomData;
-use Shopware\Storefront\Page\Product\ProductPageLoadedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Shopware\Core\System\SalesChannel\Entity\SalesChannelEntityLoadedEvent;
 use Shopware\Core\Content\Product\ProductEvents;
@@ -29,22 +27,26 @@ class ProductPageSubscriber implements EventSubscriberInterface
 
   public function onProductsLoaded(SalesChannelEntityLoadedEvent $event): void
   {
-      $salesChannelId = $event->getSalesChannelContext()->getSalesChannelId();
-      $mode = $this->configs->getConfig('environment', $salesChannelId);
-      $minFinanceAmount = (float) $this->configs->getConfig('minFinanceAmount', $salesChannelId);
-      $maxFinanceAmount = (float) $this->configs->getConfig('maxFinanceAmount', $salesChannelId);
-      $storeCode = $this->configs->getConfig('storeCode', $salesChannelId);
-      foreach ($event->getEntities() as $entity) {
-          if (!$entity instanceof SalesChannelProductEntity) {
-              continue;
-          }
-  
-          $entity->addExtension('credovaFinance', new ArrayStruct([
-              'minFinanceAmount' => $minFinanceAmount,
-              'maxFinanceAmount' => $maxFinanceAmount,
-              'storeCode' => $storeCode,
-              'mode' => $mode,
-          ]));
+    $salesChannelId = $event->getSalesChannelContext()->getSalesChannelId();
+    $mode = $this->configs->getConfig('environment', $salesChannelId);
+    $minFinanceAmount = (float) $this->configs->getConfig('minFinanceAmount', $salesChannelId);
+    $maxFinanceAmount = (float) $this->configs->getConfig('maxFinanceAmount', $salesChannelId);
+    $storeCode = $this->configs->getConfig('storeCode', $salesChannelId);
+    $dataMessage = $this->configs->getConfig('dataMessage', $salesChannelId);
+    $showCredovaLogo = $this->configs->getConfig('showCredovaLogo', $salesChannelId);
+    foreach ($event->getEntities() as $entity) {
+      if (!$entity instanceof SalesChannelProductEntity) {
+        continue;
       }
+
+      $entity->addExtension('credovaFinance', new ArrayStruct([
+        'minFinanceAmount' => $minFinanceAmount,
+        'maxFinanceAmount' => $maxFinanceAmount,
+        'storeCode' => $storeCode,
+        'dataMessage' => $dataMessage,
+        'showCredovaLogo' => $showCredovaLogo,
+        'mode' => $mode,
+      ]));
+    }
   }
 }

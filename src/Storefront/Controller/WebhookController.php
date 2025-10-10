@@ -3,6 +3,7 @@
 namespace Credova\Storefront\Controller;
 
 use Credova\Service\OrderTransactionMapper\OrderTransactionMapper;
+use Credova\Service\PaymentTransactionStateHandler\CredovaTransactionStateHandler;
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
@@ -18,8 +19,8 @@ use JsonException;
 class WebhookController extends StorefrontController
 {
   private const STATUS_TO_ACTION = [
-    'Approved' => 'paid',
-    'Signed' => 'paid',
+    'Approved' => 'approved',
+    'Signed' => 'signed',
     'Funded' => 'paid',
     'Declined' => 'fail',
     'Returned' => 'cancel',
@@ -27,6 +28,7 @@ class WebhookController extends StorefrontController
 
   public function __construct(
     private readonly OrderTransactionStateHandler $transactionStateHandler,
+    private readonly CredovaTransactionStateHandler $credovaTransactionStateHandler,
     private readonly OrderTransactionMapper       $orderTransactionMapper,
     private readonly LoggerInterface              $logger
   )
@@ -76,14 +78,17 @@ class WebhookController extends StorefrontController
       $status = $payload['status'] ?? null;
       $actionMethod = $status !== null ? (self::STATUS_TO_ACTION[$status] ?? null) : null;
 
-      if ($actionMethod !== null) {
-        $this->transactionStateHandler->{$actionMethod}($transactionId, $swContext);
-      } else {
-        $this->logger->info('Credova webhook received unhandled status', [
+      match ($actionMethod) {
+        'approved' => $this->credovaTransactionStateHandler->credovaApproved($transactionId, $swContext),
+        'signed'   => $this->credovaTransactionStateHandler->credovaSigned($transactionId, $swContext),
+        'paid'             => $this->transactionStateHandler->paid($transactionId, $swContext),
+        'fail'             => $this->transactionStateHandler->fail($transactionId, $swContext),
+        'cancel'           => $this->transactionStateHandler->cancel($transactionId, $swContext),
+        default            => $this->logger->info('Credova webhook received status with no action', [
           'status' => $status,
           'payload' => $payload,
-        ]);
-      }
+        ]),
+      };
 
       return $this->respond(true, 'Webhook processed');
     } catch (\Throwable $e) {

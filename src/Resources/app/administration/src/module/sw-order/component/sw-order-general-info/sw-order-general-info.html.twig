@@ -1,0 +1,21 @@
+{% block sw_order_detail_base_general_info_order_states_payment %}
+    <div class="sw-order-general-info__order-state">
+        <sw-order-state-select-v2
+                v-tooltip="{
+                    message: $tc('sw-privileges.tooltip.warning'),
+                    disabled: acl.can('order.editor'),
+                    showOnDisabledElements: true
+                }"
+                :class="getBackgroundStyle()"
+                class="sw-order-general-info__order-state-payment"
+                :transition-options="paymentStateOptions"
+                state-type="order_transaction"
+                rounded-style
+                :placeholder="transaction.stateMachineState.translated.name"
+                :label="$tc('sw-order.stateCard.headlineTransactionState')"
+                :background-style="backgroundStyle('order_transaction')"
+                :disabled="!acl.can('order.editor')"
+                @state-select="onStateSelected"
+        />
+    </div>
+{% endblock %}

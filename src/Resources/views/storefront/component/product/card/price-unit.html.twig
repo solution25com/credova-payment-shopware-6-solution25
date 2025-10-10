@@ -1,18 +1,39 @@
 {% sw_extends '@Storefront/storefront/component/product/card/price-unit.html.twig' %}
 
 {% block component_product_box_price %}
-	{% set unitPrice = product.calculatedPrice.unitPrice %}
-	{% set minFinanceAmount = product.extensions.credovaFinance.minFinanceAmount %}
-	{% set maxFinanceAmount = product.extensions.credovaFinance.maxFinanceAmount %}
-	{{parent()}}
+	{% set unitPrice   = product.calculatedPrice.unitPrice %}
+	{% set financeExt  = product.extensions.credovaFinance ?? {} %}
+	{% set minAmount   = financeExt.minFinanceAmount ?? 0 %}
+	{% set maxAmount   = financeExt.maxFinanceAmount ?? 999999 %}
+	{% set storeCode   = financeExt.storeCode ?? null %}
+	{% set environment = (financeExt.mode ?? 'sandbox')|lower %}
+	{% set dataMessage     = financeExt.dataMessage ?? '' %}
+	{% set showCredovaLogo = financeExt.showCredovaLogo %}
+
+	{{ parent() }}
+
 	{% if unitPrice is not null
-            and unitPrice >= minFinanceAmount
-            and unitPrice <= maxFinanceAmount %}
-		<p class="credova-button" style="font-size:14px;" data-amount={{unitPrice}} data-type="popup" data-hide-brand="true"></p>
+		and unitPrice >= minAmount
+		and unitPrice <= maxAmount
+		and storeCode
+	%}
+		{% set containerId = 'credova-prequalify-' ~ product.id %}
+		<div
+				id="{{ containerId }}"
+				data-credova="1"
+				data-store-code="{{ storeCode }}"
+				data-environment="{{ environment }}"
+				data-amount="{{ unitPrice }}"
+				data-currency="{{ context.currency.isoCode }}"
+		>
+			<p class="credova-button"
+			   data-amount="{{ unitPrice }}"
+			   data-type="popup"
+			   data-hide-brand={{showCredovaLogo}}
+			   data-message={{dataMessage}}>
+			</p>
+		</div>
 	{% endif %}
-	 <script src="https://plugin.credova.com/plugin.min.js"></script>
-	 <script>
-	    CRDV.plugin.config({ environment: CRDV.Environment.Sandbox, store: "JRH000", currency: "EUR"  });
-	    CRDV.plugin.inject("credova-button");
-	  </script>
+
+	<script src="https://plugin.credova.com/plugin.min.js" defer></script>
 {% endblock %}

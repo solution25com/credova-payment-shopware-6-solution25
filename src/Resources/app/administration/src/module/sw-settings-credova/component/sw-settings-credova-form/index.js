@@ -9,27 +9,55 @@ Component.register('sw-settings-credova-form', {
 
     data() {
         return {
-            salesChannelId: null, 
+            salesChannelId: null,
             config: {},
             configs: {},
             popupTypeOptions: [
                 { value: 'iframe', label: this.$tc('sw-settings-credova.options.popupType.iframe') },
-                { value: 'popup', label: this.$tc('sw-settings-credova.options.popupType.popup') }
+                { value: 'popup',  label: this.$tc('sw-settings-credova.options.popupType.popup') }
             ],
             checkoutFlowOptions: [
                 { value: 'auth_capture', label: this.$tc('sw-settings-credova.options.checkoutFlow.auth_capture') },
-                { value: 'auth_only', label: this.$tc('sw-settings-credova.options.checkoutFlow.auth_only') },
-                { value: 'order_first', label: this.$tc('sw-settings-credova.options.checkoutFlow.order_first')}
+                { value: 'auth_only',    label: this.$tc('sw-settings-credova.options.checkoutFlow.auth_only') },
+                { value: 'order_first',  label: this.$tc('sw-settings-credova.options.checkoutFlow.order_first') }
             ]
         };
-    },    
+    },
+
+    computed: {
+        isCustomTextFilled() {
+            const v = this.config['Credova.config.dataMessage'];
+            if(typeof v === 'string' && v.trim().length > 0){
+                console.log("Custom Text is filled");
+            }
+
+            return typeof v === 'string' && v.trim().length > 0;
+        }
+    },
 
     created() {
         this.salesChannelId = null;
         this.loadConfig();
     },
 
+    watch: {
+        config: {
+            handler() {
+                this.enforceLogoRule();
+            },
+            deep: true
+        }
+    },
+
     methods: {
+        enforceLogoRule() {
+            if (this.isCustomTextFilled) {
+                if (this.config['Credova.config.showCredovaLogo'] !== true) {
+                    this.$set(this.config, 'Credova.config.showCredovaLogo', true);
+                }
+            }
+        },
+
         async onSalesChannelChanged(salesChannelId) {
             this.salesChannelId = salesChannelId;
             await this.loadConfig();
@@ -37,50 +65,63 @@ Component.register('sw-settings-credova-form', {
 
         async loadConfig() {
             try {
-
                 const config = await this.systemConfigApiService.getConfig('core.basicInformation');
-                // The shop name is usually in the config as:
-                // config[0].elements.find(e => e.name === 'core.basicInformation.shopName')
-                const shopNameField = config[0].elements.find(
-                    el => el.name === 'core.basicInformation.shopName'
-                );
+                const shopNameField = config[0].elements.find(el => el.name === 'core.basicInformation.shopName');
                 this.shopName = shopNameField ? shopNameField.defaultValue : null;
-                // Or, get the value (not schema) with getValues:
-                const valuesa = await this.systemConfigApiService.getValues('core.basicInformation', null);
-                this.shopName = valuesa['core.basicInformation.shopName'];
-                console.log('Config loaded:', this.shopName);
+
                 const values = await this.systemConfigApiService.getValues('Credova.config', this.salesChannelId);
                 this.config = { ...values };
 
-                if (this.config.popupType !== undefined) {
-                    this.config.popupType = String(this.config.popupType);
+                if (this.config['Credova.config.popupType'] !== undefined) {
+                    this.config['Credova.config.popupType'] = String(this.config['Credova.config.popupType']);
+                }
+                if (this.config['Credova.config.checkoutFlow'] !== undefined) {
+                    this.config['Credova.config.checkoutFlow'] = String(this.config['Credova.config.checkoutFlow']);
+                }
+                if (this.config['Credova.config.dataMessage'] == null) {
+                    this.$set(this.config, 'Credova.config.dataMessage', '');
                 }
 
-                if (this.config.checkoutFlow !== undefined) {
-                    this.config.checkoutFlow = String(this.config.checkoutFlow);
-                }
+                this.enforceLogoRule();
             } catch (e) {
                 this.createNotificationError({
                     title: this.$tc('sw-settings-credova.notification.loadError.title'),
                     message: this.$tc('sw-settings-credova.notification.loadError.message')
-                });                
+                });
             }
         },
 
         async saveConfig() {
             const min = Number(this.config['Credova.config.minFinanceAmount']);
             const max = Number(this.config['Credova.config.maxFinanceAmount']);
-        
+            const dataMessage = this.config['Credova.config.dataMessage'];
+            if(typeof dataMessage === 'string' && dataMessage.trim().length > 0) {
+                this.createNotificationWarning({
+                    title: this.$tc('warning'),
+                    message: this.$tc('sw-settings-credova.help.logoForcedByCustomText')
+                });
+            }
+
             if (min < 300 || min > 5000 || max < 300 || max > 5000) {
                 this.createNotificationWarning({
                     title: this.$tc('sw-settings-credova.notification.validation.title'),
                     message: this.$tc('sw-settings-credova.notification.validation.message')
                 });
                 return;
-            }            
-        
+            }
+
+            this.enforceLogoRule();
+
+            const payload = { ...this.config };
+            const dmKey = 'Credova.config.dataMessage';
+            const dmVal = payload[dmKey];
+
+            if (typeof dmVal === 'string' && dmVal.trim() === '') {
+                delete payload[dmKey];
+            }
+
             try {
-                await this.systemConfigApiService.saveValues(this.config, this.salesChannelId);
+                await this.systemConfigApiService.saveValues(payload, this.salesChannelId);
                 this.createNotificationSuccess({
                     title: this.$tc('sw-settings-credova.notification.saveSuccess.title'),
                     message: this.$tc('sw-settings-credova.notification.saveSuccess.message')
@@ -89,7 +130,7 @@ Component.register('sw-settings-credova-form', {
                 this.createNotificationError({
                     title: this.$tc('sw-settings-credova.notification.saveError.title'),
                     message: this.$tc('sw-settings-credova.notification.saveError.message')
-                });                
+                });
             }
         }
     }
