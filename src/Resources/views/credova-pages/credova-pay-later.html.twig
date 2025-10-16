@@ -1,29 +1,32 @@
 {% if page.extensions.credova_payment is defined %}
-  {% set credova = page.extensions.credova_payment %}
+    {% set credova = page.extensions.credova_payment %}
 
-  <div class="credova-accordion-container">
-    {% if credova.errors is defined and credova.errors|length > 0 %}
-      <button type="button" class="accordion"> ⚠️ Credova Validation</button>
-      <div class="panel">
-        <ul>
-          {% for field, message in credova.errors %}
-            <li><strong>{{ field|capitalize }}:</strong> {{ message }}</li>
-          {% endfor %}
-        </ul>
-      </div>
-    {% endif %}
-  </div>
+    <div class="credova-accordion-container">
+        {% if credova.errors is defined and credova.errors|length > 0 %}
+            <button type="button" class="accordion"> ⚠️ Credova Validation</button>
+            <div class="panel credova-error-panel">
+                <ul class="credova-error-list">
+                    {% for field, message in credova.errors %}
+                        <li class="credova-error-item">
+                            <span class="credova-error-field">{{ field|capitalize }}:</span>
+                            <span class="credova-error-message">{{ message }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
 
-  <template credova-payment-pay-later></template>
+    <template credova-payment-pay-later></template>
 
-  <div id="credova-payment-pay-later"
-       data-credova-payment-pay-later="true"
-       data-store-code="{{ credova.storeCode }}"
-       data-mode="{{ credova.mode }}"
-          {% if credova.errors is defined %}
-            data-errors='{{ credova.errors|json_encode }}'
-          {% endif %}
-  >
-    <script src="https://plugin.credova.com/plugin.min.js"></script>
-  </div>
+    <div id="credova-payment-pay-later"
+         data-credova-payment-pay-later="true"
+         data-store-code="{{ credova.storeCode }}"
+         data-mode="{{ credova.mode }}"
+            {% if credova.errors is defined %}
+                data-errors='{{ credova.errors|json_encode }}'
+            {% endif %}
+    >
+        <script src="https://plugin.credova.com/plugin.min.js"></script>
+    </div>
 {% endif %}

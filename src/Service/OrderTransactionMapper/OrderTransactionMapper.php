@@ -10,79 +10,104 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 
 class OrderTransactionMapper
 {
-  private EntityRepository $orderTransactionRepository;
-  private EntityRepository $orderRepository;
+    public function __construct(private readonly EntityRepository $orderTransactionRepository, private readonly EntityRepository $orderRepository, private readonly EntityRepository $customerRepository)
+    {
+    }
 
-  public function __construct(EntityRepository $orderTransactionRepository,  EntityRepository $orderRepository)
-  {
-    $this->orderTransactionRepository = $orderTransactionRepository;
-    $this->orderRepository = $orderRepository;
-  }
+    public function getOrderTransactionsById(string $transactionId, Context $context)
+    {
+        $criteria = new Criteria([$transactionId]);
+        $criteria->addAssociation('order');
+        $criteria->addAssociation('order.orderCustomer.customer');
+        $criteria->addAssociation('order.orderCustomer.customer.addresses');
+        $criteria->addAssociation('order.currency');
+        $criteria->addAssociation('order.billingAddress');
+        $criteria->addAssociation('order.billingAddress.country');
+        $criteria->addAssociation('order.billingAddress.countryState');
+        $criteria->addAssociation('order.lineItems');
+        $criteria->addAssociation('deliveries.shippingMethod');
+        $criteria->addAssociation('deliveries.shippingOrderAddress.country');
+        $criteria->addAssociation('deliveries.shippingOrderAddress.countryState');
+        $criteria->addAssociation('paymentMethod');
 
-  public function getOrderTransactionsById(string $transactionId, Context $context)
-  {
-    $criteria = new Criteria([$transactionId]);
-    $criteria->addAssociation('order');
-    $criteria->addAssociation('order.orderCustomer.customer');
-    $criteria->addAssociation('order.orderCustomer.customer.addresses');
-    $criteria->addAssociation('order.currency');
-    $criteria->addAssociation('order.billingAddress');
-    $criteria->addAssociation('order.billingAddress.country');
-    $criteria->addAssociation('order.billingAddress.countryState');
-    $criteria->addAssociation('order.lineItems');
-    $criteria->addAssociation('paymentMethod');
+        return $this->orderTransactionRepository->search($criteria, $context)->first();
+    }
 
-    return $this->orderTransactionRepository->search($criteria, $context)->first();
-  }
+    public function setCredovaCustomFieldFromOrder(OrderEntity $order, Context $context, array $credovaData): void
+    {
+        $this->orderRepository->update([[
+        'id' => $order->getId(),
+        'customFields' => array_merge(
+            $order->getCustomFields() ?? [],
+            $credovaData
+        ),
+        ]], $context);
+    }
 
-  public function setCredovaCustomFieldFromOrder(OrderEntity $order, Context $context, array $credovaData): void
-  {
-    $this->orderRepository->update([[
-      'id' => $order->getId(),
-      'customFields' => array_merge(
-        $order->getCustomFields() ?? [],
-        $credovaData
-      ),
-    ]], $context);
-  }
+    public function updateCredovaFieldsFromWebhook(OrderEntity $order, Context $context, array $webhookData): void
+    {
+        $fieldsToStore = [
+        'credovaApplicationId' => $webhookData['applicationId'],
+        'credovaPublicId' => $webhookData['publicId'],
+        'credovaPhone' => $webhookData['phone'],
+        'credovaStatus' => $webhookData['status'],
+        'credovaApprovalAmount' => $webhookData['approvalAmount'] ?? null,
+        'credovaBorrowedAmount' => $webhookData['borrowedAmount'] ?? null,
+        'credovaTotalInStorePayment' => $webhookData['totalInStorePayment'] ?? null,
+        'credovaInvoiceAmount' => $webhookData['invoiceAmount'] ?? null,
+        'credovaLenderCode' => $webhookData['lenderCode'] ?? null,
+        'credovaLenderName' => $webhookData['lenderName'] ?? null,
+        'credovaLenderDisplayName' => $webhookData['lenderDisplayName'] ?? null,
+        'credovaFinancingPartnerCode' => $webhookData['financingPartnerCode'] ?? null,
+        'credovaFinancingPartnerName' => $webhookData['financingPartnerName'] ?? null,
+        'credovaFinancingPartnerDisplayName' => $webhookData['financingPartnerDisplayName'] ?? null,
+        'credovaOfferId' => $webhookData['offerId'] ?? null,
+        ];
 
-  public function updateCredovaFieldsFromWebhook(OrderEntity $order, Context $context, array $webhookData): void
-  {
-    $fieldsToStore = [
-      'credovaApplicationId' => $webhookData['applicationId'],
-      'credovaPublicId' => $webhookData['publicId'],
-      'credovaPhone' => $webhookData['phone'],
-      'credovaStatus' => $webhookData['status'],
-      'credovaApprovalAmount' => $webhookData['approvalAmount'] ?? null,
-      'credovaBorrowedAmount' => $webhookData['borrowedAmount'] ?? null,
-      'credovaTotalInStorePayment' => $webhookData['totalInStorePayment'] ?? null,
-      'credovaInvoiceAmount' => $webhookData['invoiceAmount'] ?? null,
-      'credovaLenderCode' => $webhookData['lenderCode'] ?? null,
-      'credovaLenderName' => $webhookData['lenderName'] ?? null,
-      'credovaLenderDisplayName' => $webhookData['lenderDisplayName'] ?? null,
-      'credovaFinancingPartnerCode' => $webhookData['financingPartnerCode'] ?? null,
-      'credovaFinancingPartnerName' => $webhookData['financingPartnerName'] ?? null,
-      'credovaFinancingPartnerDisplayName' => $webhookData['financingPartnerDisplayName'] ?? null,
-      'credovaOfferId' => $webhookData['offerId'] ?? null,
-    ];
+        $this->orderRepository->update([[
+        'id' => $order->getId(),
+        'customFields' => array_merge(
+            $order->getCustomFields() ?? [],
+            $fieldsToStore
+        ),
+        ]], $context);
+    }
 
-    $this->orderRepository->update([[
-      'id' => $order->getId(),
-      'customFields' => array_merge(
-        $order->getCustomFields() ?? [],
-        $fieldsToStore
-      ),
-    ]], $context);
-  }
+    public function updateCredovaCustomer(OrderEntity $order, Context $context, array $webhookData): void
+    {
+        $fieldToStore = [
+        'credovaApplicationId' => $webhookData['applicationId'],
+        'credovaPublicId' => $webhookData['publicId'],
+        'credovaPhone' => $webhookData['phone'],
+        'credovaApprovalAmount' => $webhookData['approvalAmount'] ?? null,
+        'credovaBorrowedAmount' => $webhookData['borrowedAmount'] ?? null,
+        ];
+
+        $this->customerRepository->update([[
+        'id' => $order->getOrderCustomer()->getCustomerId(),
+        'customFields' => array_merge(
+            $order->getOrderCustomer()->getCustomFields() ?? [],
+            $fieldToStore
+        ),
+        ]], $context);
+    }
 
 
-  public function findOrderByCredovaPublicId(string $publicId, Context $context): ?OrderEntity
-  {
-    $criteria = new Criteria();
-    $criteria->addFilter(new EqualsFilter('customFields.credovaPublicId', $publicId));
-    $criteria->addAssociation('transactions');
-    $criteria->addAssociation('order');
+    public function findOrderByCredovaPublicId(string $publicId, Context $context): ?OrderEntity
+    {
+        $criteria = new Criteria();
+        $criteria->addFilter(new EqualsFilter('customFields.credovaPublicId', $publicId));
+        $criteria->addAssociation('transactions');
+        $criteria->addAssociation('order');
+        $criteria->addAssociation('deliveries.shippingMethod');
+        $criteria->addAssociation('deliveries.shippingOrderAddress.country');
+        $criteria->addAssociation('deliveries.shippingOrderAddress.countryState');
 
-    return $this->orderRepository->search($criteria, $context)->first();
-  }
+        $order = $this->orderRepository->search($criteria, $context)->first();
+
+        if ($order instanceof OrderEntity) {
+            return $order;
+        }
+        return null;
+    }
 }

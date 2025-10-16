@@ -33,7 +33,6 @@ Shopware.Component.override('sw-icon', {
                 // the component is executed. Unfortunately shopware resets the rendered svg string in this hook,
                 // therefore need to wait for the next tick to ensure that our svg string gets rendered.
                 //
-                // eslint-disable-next-line max-len,vue/max-len
                 // See https://github.com/shopware/platform/blob/acc85ca70ac44e22ebe1e6e2a370a6d92384083c/src/Administration/Resources/app/administration/src/app/component/base/sw-icon/index.js#L122
                 //
                 // This workaround will be removed as soon as sw-icon will support loading of third party icons

@@ -1,6 +1,6 @@
 import './page/sw-settings-credova-list';
 import './component/sw-settings-credova-icon'
-const { Module, Context } = Shopware;
+const { Module } = Shopware;
 
 
     Module.register('sw-settings-credova', {

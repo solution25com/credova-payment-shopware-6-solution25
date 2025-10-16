@@ -23,15 +23,10 @@ Component.register('sw-settings-credova-form', {
             ]
         };
     },
-
     computed: {
         isCustomTextFilled() {
-            const v = this.config['Credova.config.dataMessage'];
-            if(typeof v === 'string' && v.trim().length > 0){
-                console.log("Custom Text is filled");
-            }
-
-            return typeof v === 'string' && v.trim().length > 0;
+            const value = this.config?.['Credova.config.dataMessage'] ?? '';
+            return typeof value === 'string' && value.trim().length > 0;
         }
     },
 
@@ -83,7 +78,7 @@ Component.register('sw-settings-credova-form', {
                 }
 
                 this.enforceLogoRule();
-            } catch (e) {
+            } catch {
                 this.createNotificationError({
                     title: this.$tc('sw-settings-credova.notification.loadError.title'),
                     message: this.$tc('sw-settings-credova.notification.loadError.message')
@@ -126,7 +121,7 @@ Component.register('sw-settings-credova-form', {
                     title: this.$tc('sw-settings-credova.notification.saveSuccess.title'),
                     message: this.$tc('sw-settings-credova.notification.saveSuccess.message')
                 });
-            } catch (e) {
+            } catch {
                 this.createNotificationError({
                     title: this.$tc('sw-settings-credova.notification.saveError.title'),
                     message: this.$tc('sw-settings-credova.notification.saveError.message')

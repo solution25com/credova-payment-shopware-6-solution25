@@ -2,10 +2,9 @@
 
 namespace Credova\PaymentMethods;
 
-
 class PaymentMethods
 {
-  public const PAYMENT_METHODS = [
+    public const PAYMENT_METHODS = [
     CredovaPaymentMethod::class,
-  ];
+    ];
 }

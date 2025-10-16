@@ -1,17 +1,35 @@
 {
     "name": "credova/credova",
-    "description": "credova/credova",
+    "description": "Credova payment integration for Shopware 6",
     "type": "shopware-platform-plugin",
-    "version": "1.1.5",
-    "license": "MIT",
+    "version": "1.1.8",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "solution 25",
+            "role": "Manufacturer"
+        }
+    ],
     "require": {
-        "shopware/core": "~6.6.0"
+        "shopware/core": "^6.6 || ^6.7"
     },
     "extra": {
         "shopware-plugin-class": "Credova\\Credova",
         "label": {
-            "de-DE": "Credova payment",
-            "en-GB": "Credova payment"
+            "de-DE": "Credova Zahlungsmethode für Shopware 6",
+            "en-GB": "Credova Payment for Shopware 6"
+        },
+        "description": {
+            "de-DE": "Das Credova Shopware 6 Plugin integriert die Finanzierungslösungen von Credova sicher in Ihren Shop und bietet Kunden flexible Zahlungsoptionen für ein reibungsloses Einkaufserlebnis.",
+            "en-GB": "The Credova Shopware 6 plugin securely integrates Credova’s financing solutions into your store, offering flexible payment options for a smooth shopping experience."
+        },
+        "manufacturerLink": {
+            "de-DE": "https://www.credova.com",
+            "en-GB": "https://www.credova.com"
+        },
+        "supportLink": {
+            "de-DE": "https://www.credova.com/support",
+            "en-GB": "https://www.credova.com/support"
         }
     },
     "autoload": {
@@ -23,5 +41,26 @@
         "psr-4": {
             "Credova\\Tests\\": "tests/"
         }
+    },
+    "config": {
+        "allow-plugins": {
+            "symfony/runtime": true
+        }
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^4.0",
+        "shopware/storefront": "^6.6 || ^6.7"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "@enable-precommit"
+        ],
+        "post-update-cmd": [
+            "@enable-precommit"
+        ],
+        "enable-precommit": [
+            "cp ./pre-commit .git/hooks/pre-commit",
+            "chmod +x .git/hooks/pre-commit"
+        ]
     }
 }

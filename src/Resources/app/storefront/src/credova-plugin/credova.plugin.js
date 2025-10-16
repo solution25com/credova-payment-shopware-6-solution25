@@ -1,6 +1,6 @@
-import Plugin from 'src/plugin-system/plugin.class';
+const { PluginBaseClass } = window;
 
-export default class CredovaPlugin extends Plugin {
+export default class CredovaPlugin extends PluginBaseClass {
     static options = {
         selector: '[data-credova="1"]',
     };
@@ -32,7 +32,6 @@ export default class CredovaPlugin extends Plugin {
 
         const storeCode = node.dataset.storeCode;
         const currency = node.dataset.currency || 'USD';
-        const amount = Number(node.dataset.amount || 0);
 
         CRDV.plugin.config({ environment: env, store: storeCode, currency });
 
@@ -54,8 +53,6 @@ export default class CredovaPlugin extends Plugin {
             window.__credovaApprovedListener = true;
         }
 
-        node.addEventListener('click', (evt) => {
-        });
     }
 
     async _sendPublicId(publicId, nodeForHeaders) {

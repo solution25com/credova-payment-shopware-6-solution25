@@ -2,13 +2,13 @@ import template from './sw-settings-credova-list.html.twig';
 import './sw-settings-credova-list.scss';
 import '../../component';
 
-const { Component, Context } = Shopware;
+const { Component } = Shopware;
 
 Component.register('sw-settings-credova-list', {
     template,
 
     mounted() {
-        this.fetchShopwareVersion();
+        // this.fetchShopwareVersion();
     },
 
     methods: {

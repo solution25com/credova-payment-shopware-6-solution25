@@ -48,42 +48,39 @@
   margin-bottom: 10px;
 }
 
-.panel ul {
+/* Wrap list inside panel with class */
+.panel .credova-error-list {
   list-style: disc;
   padding-left: 20px;
   margin: 10px 0;
 }
 
-.panel li {
-  margin-bottom: 5px;
+.credova-error-item {
+  margin-bottom: 6px;
+}
+
+.credova-error-field {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 2px;
+  font-size: 16px;
+}
+
+.credova-error-message {
+  display: inline-block;
 }
 
 .credova-accordion-container {
   margin: 20px 0;
 }
 
- .credova-error-box {
-   background-color: #fff3cd;
-   color: #856404;
-   border: 1px solid #ffeeba;
-   padding: 16px 20px;
-   border-radius: 6px;
-   margin: 20px 0;
-   font-family: Arial, sans-serif;
-   font-size: 15px;
- }
-
-.credova-error-box strong {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 16px;
-}
-
-.credova-error-list {
-  margin-top: 10px;
-  padding-left: 18px;
-}
-
-.credova-error-list li {
-  margin-bottom: 6px;
+.credova-error-box {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  padding: 16px 20px;
+  border-radius: 6px;
+  margin: 20px 0;
+  font-family: Arial, sans-serif;
+  font-size: 15px;
 }

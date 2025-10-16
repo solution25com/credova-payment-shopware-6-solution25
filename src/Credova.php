@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Credova;
 
@@ -17,84 +19,84 @@ use Shopware\Core\Framework\Plugin\Util\PluginIdProvider;
 
 class Credova extends Plugin
 {
-  public function install(InstallContext $context): void
-  {
-    $this->addPaymentMethod($context->getContext());
-  }
-
-  public function uninstall(UninstallContext $context): void
-  {
-    $this->setPaymentMethodIsActive(false, $context->getContext());
-  }
-
-  public function activate(ActivateContext $context): void
-  {
-    $this->setPaymentMethodIsActive(true, $context->getContext());
-    parent::activate($context);
-  }
-
-
-  public function deactivate(DeactivateContext $context): void
-  {
-    $this->setPaymentMethodIsActive(false, $context->getContext());
-    parent::deactivate($context);
-  }
-
-  private function addPaymentMethod(Context $context): void
-  {
-    $paymentMethodExists = $this->getPaymentMethodId();
-
-    if ($paymentMethodExists) {
-      return;
+    public function install(InstallContext $context): void
+    {
+        $this->addPaymentMethod($context->getContext());
     }
 
-    $pluginIdProvider = $this->container->get(PluginIdProvider::class);
-    $pluginId = $pluginIdProvider->getPluginIdByBaseClass(get_class($this), $context);
-
-    $paymentMethod = new CredovaPaymentMethod();
-
-    $credovaPaymentData = [
-      'handlerIdentifier' => $paymentMethod->getHandlerIdentifier(),
-      'name' => $paymentMethod->getName(),
-      'description' => $paymentMethod->getDescription(),
-      'pluginId' => $pluginId,
-      'afterOrderEnabled' => true,
-      'technicalName' => $paymentMethod->getTechnicalName(),
-    ];
-
-    $paymentRepository = $this->container->get('payment_method.repository');
-    $paymentRepository->create([$credovaPaymentData], $context);
-  }
-
-
-  private function setPaymentMethodIsActive(bool $active, Context $context): void
-  {
-    $paymentRepository = $this->container->get('payment_method.repository');
-
-    $paymentMethodId = $this->getPaymentMethodId();
-
-    if (!$paymentMethodId) {
-      return;
+    public function uninstall(UninstallContext $context): void
+    {
+        $this->setPaymentMethodIsActive(false, $context->getContext());
     }
 
-    $paymentMethod = [
-      'id' => $paymentMethodId,
-      'active' => $active,
-    ];
+    public function activate(ActivateContext $context): void
+    {
+        $this->setPaymentMethodIsActive(true, $context->getContext());
+        parent::activate($context);
+    }
 
-    $paymentRepository->update([$paymentMethod], $context);
-  }
 
-  private function getPaymentMethodId(): ?string
-  {
-    $paymentRepository = $this->container->get('payment_method.repository');
+    public function deactivate(DeactivateContext $context): void
+    {
+        $this->setPaymentMethodIsActive(false, $context->getContext());
+        parent::deactivate($context);
+    }
 
-    $paymentCriteria = (new Criteria())->addFilter(
-      new EqualsAnyFilter('handlerIdentifier', PaymentMethods::PAYMENT_METHODS)
-    );
+    private function addPaymentMethod(Context $context): void
+    {
+        $paymentMethodExists = $this->getPaymentMethodId($context);
 
-    return $paymentRepository->searchIds($paymentCriteria, Context::createDefaultContext())->firstId();
-  }
+        if ($paymentMethodExists) {
+            return;
+        }
+
+        $pluginIdProvider = $this->container->get(PluginIdProvider::class);
+        $pluginId = $pluginIdProvider->getPluginIdByBaseClass(get_class($this), $context);
+
+        $paymentMethod = new CredovaPaymentMethod();
+
+        $credovaPaymentData = [
+        'handlerIdentifier' => $paymentMethod->getHandlerIdentifier(),
+        'name' => $paymentMethod->getName(),
+        'description' => $paymentMethod->getDescription(),
+        'pluginId' => $pluginId,
+        'afterOrderEnabled' => true,
+        'technicalName' => $paymentMethod->getTechnicalName(),
+        ];
+
+        $paymentRepository = $this->container->get('payment_method.repository');
+        $paymentRepository->create([$credovaPaymentData], $context);
+    }
+
+
+    private function setPaymentMethodIsActive(bool $active, Context $context): void
+    {
+        $paymentRepository = $this->container->get('payment_method.repository');
+
+        $paymentMethodId = $this->getPaymentMethodId($context);
+
+        if (!$paymentMethodId) {
+            return;
+        }
+
+        $paymentMethod = [
+        'id' => $paymentMethodId,
+        'active' => $active,
+        ];
+
+        $paymentRepository->update([$paymentMethod], $context);
+    }
+
+    private function getPaymentMethodId(Context $context): ?string
+    {
+        $paymentRepository = $this->container->get('payment_method.repository');
+
+        $paymentCriteria = (new Criteria())->addFilter(
+            new EqualsAnyFilter('handlerIdentifier', PaymentMethods::PAYMENT_METHODS)
+        );
+
+        return $paymentRepository->searchIds($paymentCriteria, $context)->firstId();
+    }
 
     public function update(UpdateContext $updateContext): void
     {
