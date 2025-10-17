@@ -10,15 +10,7 @@
             </div>
         {% else %}
             <div class="credova-error-box">
-                <strong> ⚠️ We found issues with your billing information:</strong>
-
-                <ul class="credova-error-list">
-                    {% for field, message in credova.errors %}
-                        <li><strong>{{ field|capitalize }}:</strong> {{ message }}</li>
-                    {% endfor %}
-                </ul>
-
-                <p>Please go back and correct the information before continuing using Credova payment.</p>
+                <strong> ⚠️ Please review the validation message above to proceed with your order.</strong>
             </div>
         {% endif %}
     {% else %}

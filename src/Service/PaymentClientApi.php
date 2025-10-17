@@ -105,19 +105,23 @@ class PaymentClientApi extends Endpoints
 
     private function sendApplicationRequest(string $publicId, string $endpointKey, array $data = []): string
     {
-        $this->setupClient();
+        try {
+            $this->setupClient();
 
-        $endpoint = Endpoints::buildApplicationUrl($publicId, Endpoints::getEndpoint($endpointKey));
+            $endpoint = Endpoints::buildApplicationUrl($publicId, Endpoints::getEndpoint($endpointKey));
 
-        $response = $this->client->request($endpoint['method'], $endpoint['url'], [
-        'headers' => [
-        'Content-Type'  => 'application/json',
-        'Authorization' => 'Bearer ' . $this->requestAuthToken(),
-        ],
-        'json' => $data,
-        ]);
+            $response = $this->client->request($endpoint['method'], $endpoint['url'], [
+            'headers' => [
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer ' . $this->requestAuthToken(),
+            ],
+            'json' => $data,
+            ]);
 
-        return $response->getBody()->getContents();
+            return $response->getBody()->getContents();
+        } catch (GuzzleException $e) {
+            return $e->getMessage();
+        }
     }
 
 
