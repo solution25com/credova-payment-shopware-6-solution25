@@ -1,3 +1,6 @@
+[![Packagist Version](https://img.shields.io/packagist/v/solution25/credova.svg)](https://packagist.org/packages/solution25/credova)
+[![Packagist Downloads](https://img.shields.io/packagist/dt/solution25/credova.svg)](https://packagist.org/packages/solution25/credova)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)]([https://github.com/solution25/Credova/blob/main/LICENSE](https://github.com/solution25com/credova-payment-shopware-6-solution25/blob/main/LICENSE.md))
 
 # Credova Payment
 
