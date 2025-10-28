@@ -1,5 +1,5 @@
 {
-    "name": "credova/credova",
+    "name": "solution25/credova",
     "description": "Credova payment integration for Shopware 6",
     "type": "shopware-platform-plugin",
     "version": "1.1.8",
