@@ -3,9 +3,9 @@
 namespace Credova\Subscriber;
 
 use Credova\Service\ConfigService;
+use Shopware\Storefront\Page\Product\ProductPageLoadedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Shopware\Core\System\SalesChannel\Entity\SalesChannelEntityLoadedEvent;
-use Shopware\Core\Content\Product\ProductEvents;
 use Shopware\Core\Framework\Struct\ArrayStruct;
 use Shopware\Core\Content\Product\SalesChannel\SalesChannelProductEntity;
 
@@ -18,7 +18,7 @@ class ProductPageSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-        'sales_channel.' . ProductEvents::PRODUCT_LOADED_EVENT => ['onProductsLoaded'],
+          ProductPageLoadedEvent::class => ['onProductsLoaded'],
         ];
     }
 

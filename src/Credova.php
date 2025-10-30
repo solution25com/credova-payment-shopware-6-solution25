@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Credova;
 
 use Credova\PaymentMethods\CredovaPaymentMethod;
-use Credova\PaymentMethods\PaymentMethods;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsAnyFilter;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\Plugin;
 use Shopware\Core\Framework\Plugin\Context\ActivateContext;
 use Shopware\Core\Framework\Plugin\Context\DeactivateContext;
@@ -64,38 +63,32 @@ class Credova extends Plugin
         'technicalName' => $paymentMethod->getTechnicalName(),
         ];
 
-        $paymentRepository = $this->container->get('payment_method.repository');
-        $paymentRepository->create([$credovaPaymentData], $context);
+        $this->container->get('payment_method.repository')->create([$credovaPaymentData], $context);
     }
 
 
     private function setPaymentMethodIsActive(bool $active, Context $context): void
     {
-        $paymentRepository = $this->container->get('payment_method.repository');
-
-        $paymentMethodId = $this->getPaymentMethodId($context);
-
-        if (!$paymentMethodId) {
+        $id = $this->getPaymentMethodId($context);
+        if (!$id) {
             return;
         }
 
-        $paymentMethod = [
-        'id' => $paymentMethodId,
-        'active' => $active,
-        ];
-
-        $paymentRepository->update([$paymentMethod], $context);
+        $this->container->get('payment_method.repository')->update([
+          ['id' => $id, 'active' => $active],
+        ], $context);
     }
 
     private function getPaymentMethodId(Context $context): ?string
     {
-        $paymentRepository = $this->container->get('payment_method.repository');
-
-        $paymentCriteria = (new Criteria())->addFilter(
-            new EqualsAnyFilter('handlerIdentifier', PaymentMethods::PAYMENT_METHODS)
+        $criteria = (new Criteria())->addFilter(
+            new EqualsFilter('handlerIdentifier', CredovaPaymentMethod::class)
         );
 
-        return $paymentRepository->searchIds($paymentCriteria, $context)->firstId();
+        return $this->container
+          ->get('payment_method.repository')
+          ->searchIds($criteria, $context)
+          ->firstId();
     }
 
     public function update(UpdateContext $updateContext): void

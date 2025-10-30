@@ -26,7 +26,6 @@
         </service>
 
         <service id="Credova\Subscriber\RefundEventSubscriber">
-            <argument type="service" id="order_transaction.repository" />
             <argument type="service" id="Credova\Service\PaymentClientApi" />
             <tag name="kernel.event_subscriber"/>
         </service>

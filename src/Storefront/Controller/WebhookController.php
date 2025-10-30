@@ -40,7 +40,7 @@ class WebhookController extends StorefrontController
 
     #[Route(
         path: '/credova/webhook',
-        name: 'frontend.webhook.webhook',
+        name: 'frontend.credova.webhook',
         methods: ['POST']
     )]
     public function webhook(Request $request, SalesChannelContext $context): Response
@@ -80,7 +80,10 @@ class WebhookController extends StorefrontController
                 return $this->respond(false, 'Order has no transactions');
             }
 
-            $status = $payload['status'] ?? null;
+            $status = isset($payload['status']) && is_string($payload['status'])
+            ? $payload['status']
+            : null;
+
             $actionMethod = $status !== null ? (self::STATUS_TO_ACTION[$status] ?? null) : null;
 
             match ($actionMethod) {
@@ -89,7 +92,7 @@ class WebhookController extends StorefrontController
                 'paid'             => $this->transactionStateHandler->paid($transactionId, $swContext),
                 'fail'             => $this->transactionStateHandler->fail($transactionId, $swContext),
                 'cancel'           => $this->transactionStateHandler->cancel($transactionId, $swContext),
-                default            => $this->logger->info('Credova webhook received status with no action', [
+                default            => $this->logger->notice('Credova webhook received status with no action', [
                 'status' => $status,
                 'payload' => $payload,
                 ]),

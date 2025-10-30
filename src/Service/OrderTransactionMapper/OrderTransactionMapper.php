@@ -2,6 +2,7 @@
 
 namespace Credova\Service\OrderTransactionMapper;
 
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -37,10 +38,7 @@ class OrderTransactionMapper
     {
         $this->orderRepository->update([[
         'id' => $order->getId(),
-        'customFields' => array_merge(
-            $order->getCustomFields() ?? [],
-            $credovaData
-        ),
+        'customFields' => $credovaData,
         ]], $context);
     }
 

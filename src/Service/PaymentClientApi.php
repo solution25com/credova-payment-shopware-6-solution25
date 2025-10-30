@@ -8,9 +8,9 @@ use GuzzleHttp\Exception\GuzzleException;
 
 class PaymentClientApi extends Endpoints
 {
-    private Client $client;
+    private ?Client $client = null;
     private ConfigService $configs;
-    private ?string $jwtToken = null;
+    private ?string $currentBaseUrl = null;
 
 
     public function __construct(ConfigService $configs)
@@ -21,6 +21,7 @@ class PaymentClientApi extends Endpoints
     public function requestAuthToken(string $salesChannelId = ''): ?string
     {
         $this->setupClient($salesChannelId);
+
         $endpoint = self::getEndpoint(self::AUTH_TOKEN);
         $username = $this->configs->getConfig('username', $salesChannelId);
         $password = $this->configs->getConfig('password', $salesChannelId);
@@ -37,14 +38,12 @@ class PaymentClientApi extends Endpoints
             ]);
 
             $data = json_decode($response->getBody()->getContents(), true);
-            $this->jwtToken = $data['jwt'] ?? null;
-
-            return $this->jwtToken;
-        } catch (GuzzleException $e) {
-            $this->jwtToken = null;
+            return $data['jwt'] ?? null;
+        } catch (GuzzleException) {
             return null;
         }
     }
+
 
     public function createApplication(array $body, string $salesChannelId = '', ?string $callbackUrl = null): array
     {
@@ -53,7 +52,7 @@ class PaymentClientApi extends Endpoints
 
         $headers = [
         'Content-Type'  => 'application/json',
-        'Authorization' => 'Bearer ' . $this->requestAuthToken(),
+        'Authorization' => 'Bearer ' . $this->requestAuthToken($salesChannelId),
         ];
 
         if ($callbackUrl) {
@@ -73,15 +72,15 @@ class PaymentClientApi extends Endpoints
     }
 
 
-    public function getStore()
+    public function getStore(string $salesChannelId = '')
     {
-        $this->setupClient();
+        $this->setupClient($salesChannelId);
         $endpoint = self::getEndpoint(self::GET_STORE);
 
         $response = $this->client->request($endpoint['method'], $endpoint['url'], [
         'headers' => [
         'Content-Type' => 'application/x-www-form-urlencoded',
-        'Authorization' => 'Bearer ' . $this->requestAuthToken(),
+          'Authorization' => 'Bearer ' . $this->requestAuthToken($salesChannelId),
         ]
         ]);
 
@@ -129,12 +128,15 @@ class PaymentClientApi extends Endpoints
     {
         $mode = $this->configs->getConfig('environment', $salesChannelId);
         $isProd = $mode === 'production';
-
         $baseUrl = $isProd ? EnvironmentUrl::PROD : EnvironmentUrl::SANDBOX;
 
-        $this->client = new Client([
-        'base_uri' => $baseUrl,
-        'timeout'  => 10.0,
-        ]);
+        if ($this->client === null || $this->currentBaseUrl !== $baseUrl) {
+            $this->client = new Client([
+            'base_uri' => $baseUrl,
+            'timeout'  => 10.0,
+            ]);
+
+            $this->currentBaseUrl = $baseUrl;
+        }
     }
 }

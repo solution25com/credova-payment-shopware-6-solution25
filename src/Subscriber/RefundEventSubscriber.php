@@ -4,76 +4,57 @@ namespace Credova\Subscriber;
 
 use Credova\Gateways\CredovaHandler;
 use Credova\Service\PaymentClientApi;
-use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
-use Shopware\Core\System\StateMachine\Event\StateMachineTransitionEvent;
+use Shopware\Core\Checkout\Order\Event\OrderStateMachineStateChangeEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class RefundEventSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private readonly EntityRepository $orderTransactionRepository, private readonly PaymentClientApi $paymentClient)
+    public function __construct(private readonly PaymentClientApi $paymentClient)
     {
     }
 
     public static function getSubscribedEvents()
     {
         return [
-        StateMachineTransitionEvent::class => 'onStateMachineTransition',
+        'state_enter.order_transaction.state.refunded' => 'onStateMachineTransition',
         ];
     }
 
-    public function onStateMachineTransition(StateMachineTransitionEvent $event): void
+    public function onStateMachineTransition(OrderStateMachineStateChangeEvent $event): void
     {
+        $order = $event->getOrder();
+        $orderTransaction = $order->getTransactions()->first();
 
-        $nextState = $event->getToPlace()->getTechnicalName();
-        $entityName = $event->getEntityName();
-        $transactionId = $event->getEntityId();
-
-        if ($entityName !== "order_transaction") {
+        if (!$orderTransaction) {
             return;
         }
 
-        $criteria = (new Criteria([$transactionId]))
-        ->addAssociation('paymentMethod')
-        ->addAssociation('order');
-
-        $orderTransaction = $this->orderTransactionRepository->search($criteria, $event->getContext())->first();
-        if (!$orderTransaction instanceof OrderTransactionEntity) {
-            return;
-        }
-        $handlerIdentifier = $orderTransaction->getPaymentMethod()->getHandlerIdentifier();
-
+        $handlerIdentifier = $orderTransaction->getPaymentMethod()?->getHandlerIdentifier();
         if ($handlerIdentifier !== CredovaHandler::class) {
             return;
         }
 
+        $customFields = $order->getCustomFields() ?? [];
 
-        if ($nextState === 'refunded') {
-            $order = $orderTransaction->getOrder();
-            $customFields = $order->getCustomFields();
+        if (($customFields['credovaStatus'] ?? null) !== 'Signed' || empty($customFields['credovaPublicId'])) {
+            return;
+        }
 
-            if ($customFields['credovaStatus'] == 'Signed') {
-                $publicId = $customFields['credovaPublicId'] ?? null;
+        $publicId = $customFields['credovaPublicId'];
+        $payload = [
+        'agentName'  => $customFields['credovaAgentName'] ?? 'Edon Agent',
+        'phone'      => $customFields['credovaPhone'] ?? null,
+        'email'      => $customFields['credovaEmail'] ?? null,
+        'reason'     => $customFields['credovaReason'] ?? 'Client requested a return.',
+        'returnType' => $customFields['credovaReturnType'] ?? '2',
+        ];
 
-                if ($publicId) {
-                    $payload = [
-                    'agentName' => $customFields['credovaAgentName'] ?? 'Edon Agent',
-                    'phone' => $customFields['credovaPhone'] ?? null,
-                    'email' => $customFields['credovaEmail'] ?? null,
-                    'reason' => $customFields['credovaReason'] ?? 'Client requested a return.',
-                    'returnType' => $customFields['credovaReturnType'] ?? '2',
-                    ];
-
-                    foreach ($payload as $key => $value) {
-                        if ($value === null) {
-                            unset($payload[$key]);
-                        }
-                    }
-
-                    $this->paymentClient->returnApplication($publicId, $payload);
-                }
+        foreach ($payload as $key => $value) {
+            if ($value === null) {
+                unset($payload[$key]);
             }
         }
+
+        $this->paymentClient->returnApplication($publicId, $payload);
     }
 }

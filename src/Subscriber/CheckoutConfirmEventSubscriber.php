@@ -7,16 +7,18 @@ namespace Credova\Subscriber;
 use Credova\Service\ConfigService;
 use Credova\Gateways\CredovaHandler;
 use Credova\Service\CustomerDataValidator;
-use Credova\Service\PaymentClientApi;
 use Credova\Storefront\Struct\CheckoutTemplateCustomData;
 use Shopware\Storefront\Page\Checkout\Confirm\CheckoutConfirmPageLoadedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class CheckoutConfirmEventSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private readonly CustomerDataValidator $customerDataValidator, private readonly ConfigService $configs)
-    {
+    public function __construct(
+        private readonly CustomerDataValidator $customerDataValidator,
+        private readonly ConfigService $configs
+    ) {
     }
+
     public static function getSubscribedEvents(): array
     {
         return [
@@ -26,17 +28,19 @@ class CheckoutConfirmEventSubscriber implements EventSubscriberInterface
 
     public function addPaymentMethodSpecificFormFields(CheckoutConfirmPageLoadedEvent $event): void
     {
-        $selectedPaymentGateway = $event->getSalesChannelContext()->getPaymentMethod();
+        $salesChannelContext = $event->getSalesChannelContext();
+        $salesChannelId = $salesChannelContext->getSalesChannelId();
+
+        $selectedPaymentGateway = $salesChannelContext->getPaymentMethod();
         if ($selectedPaymentGateway->getHandlerIdentifier() !== CredovaHandler::class) {
             return;
         }
 
-        $salesChannelId = $event->getSalesChannelContext()->getSalesChannelId();
-        $context = $event->getSalesChannelContext()->getContext();
+        $context = $salesChannelContext->getContext();
         $pageObject = $event->getPage();
         $cartAmount = $pageObject->getCart()->getPrice()->getTotalPrice();
+        $customerId = $salesChannelContext->getCustomer()?->getId();
 
-        $customerId = $event->getSalesChannelContext()->getCustomer()?->getId();
         $errors = [];
 
         if (!$this->customerDataValidator->validateCredovaPayment($cartAmount, $salesChannelId)) {
@@ -50,16 +54,14 @@ class CheckoutConfirmEventSubscriber implements EventSubscriberInterface
 
         $templateVariables = new CheckoutTemplateCustomData();
         $templateVariables->assign([
-        'template' => '@Storefront/credova-pages/credova-pay-later.html.twig',
-        'gateway' => 'CredovaHandler',
-        'mode' => $mode,
+        'template'  => '@Storefront/credova-pages/credova-pay-later.html.twig',
+        'gateway'   => 'CredovaHandler',
+        'mode'      => $mode,
         'storeCode' => $storeCode,
         ]);
 
         if (!empty($errors)) {
-            $templateVariables->assign([
-            'errors' => $errors
-            ]);
+            $templateVariables->assign(['errors' => $errors]);
         }
 
         $pageObject->addExtension(
