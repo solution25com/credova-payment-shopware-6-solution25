@@ -4,15 +4,10 @@
     {% set credova = page.extensions.credova_payment ?? null %}
 
     {% if credova and credova.errors is defined and credova.errors|length > 0 %}
-        {% if credova.errors|length == 1 and credova.errors['Cart Amount'] is defined %}
-            <div class="credova-error-box">
-                <strong>⚠️ {{ credova.errors['Cart Amount'] }}</strong>
-            </div>
-        {% else %}
-            <div class="credova-error-box">
-                <strong> ⚠️ Please review the validation message above to proceed with your order.</strong>
-            </div>
-        {% endif %}
+        <div class="credova-error-box">
+            <strong> ⚠️ We found issues with your billing information:</strong>
+            <p> Please review the validation message above to proceed with your order </p>
+        </div>
     {% else %}
         {{ parent() }}
     {% endif %}
