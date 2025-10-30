@@ -23,6 +23,12 @@ Credova allows customers to apply for financing and pay over time — offering m
 
 ---
 
+##  Compatibility
+- ✅ **Shopware 6.6.x**
+- ✅ **Shopware 6.7.x**
+
+---
+
 ## Get Started
 
 ### Installation & Activation
@@ -32,6 +38,12 @@ Credova allows customers to apply for financing and pay over time — offering m
    Clone the plugin repository into your Shopware `custom/plugins` directory:
    ```bash
    git clone https://github.com/solution25com/credova-payment-shopware-6-solution25.git
+   ```
+
+## Packagist
+ ```
+composer require solution25/credova
+  ```
    
 2. **Install the Plugin in Shopware 6**
 
