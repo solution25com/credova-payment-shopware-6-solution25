@@ -8,5 +8,5 @@ PluginManager.register(
 PluginManager.register(
     'PayLaterPlugin',
     () => import('./credova-plugin/pay-later.plugin'),
-    '[credova-payment-pay-later]'
+    '[data-credova-payment-pay-later="true"], [data-credova-pay-later="true"]'
 );

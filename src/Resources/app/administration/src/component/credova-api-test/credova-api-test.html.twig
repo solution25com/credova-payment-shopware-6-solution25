@@ -1,0 +1,10 @@
+<div>
+    <sw-button-process
+            :is-loading="isLoading"
+            :process-success="isSaveSuccessful"
+            @process-finish="saveFinish"
+            @click="check"
+    >
+        {{ $tc('Credova.apiTest.credovaAPI.test-api-connection') }}
+    </sw-button-process>
+</div>

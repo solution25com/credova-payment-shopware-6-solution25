@@ -1,26 +1,17 @@
-import CredovaService from '../credova-service/CredovaService';
+ 
 
 export default class PayLaterPlugin extends window.PluginBaseClass {
     static options = {
-        confirmFormId: 'confirmOrderForm',
-        parentWrapperId: 'credova-payment-pay-later',
-        storeCode: null,
-        environment: null,
+        confirmFormSelector: 'form[name="confirmOrderForm"]',
     };
 
     _registerElements() {
-        this.confirmOrderForm = document.forms[this.options.confirmFormId];
-        this.parentWrapper = document.getElementById(this.options.parentWrapperId);
+        this.confirmOrderForm = document.querySelector(this.options.confirmFormSelector);
+        this.publicId = this.el?.dataset.publicId || null;
+        this.storeCode = this.el?.dataset.credovaStoreCode || this.el?.dataset.storeCode || null;
+        this.environment = this.el?.dataset.credovaMode || this.el?.dataset.mode || 'sandbox';
 
-        this.publicId = this.parentWrapper?.getAttribute('data-public-id');
-        this.options.storeCode = this.parentWrapper?.getAttribute('data-store-code');
-        this.options.environment = this.parentWrapper?.getAttribute('data-mode');
-
-        this.credovaService = new CredovaService({
-            environment: this.options.environment,
-            storeCode: this.options.storeCode,
-            publicId: this.publicId
-        });
+        
     }
 
     init() {
@@ -30,6 +21,7 @@ export default class PayLaterPlugin extends window.PluginBaseClass {
 
     _registerEvents() {
         this._initAccordion();
+        this._ensureCredovaScript();
     }
 
     _initAccordion() {
@@ -47,3 +39,14 @@ export default class PayLaterPlugin extends window.PluginBaseClass {
         });
     }
 }
+
+PayLaterPlugin.prototype._ensureCredovaScript = function() {
+    if (window.CRDV) return;
+    if (document.querySelector('script[data-credova-script="1"]')) return;
+    const s = document.createElement('script');
+    s.src = 'https://plugin.credova.com/plugin.min.js';
+    s.async = true;
+    s.defer = true;
+    s.setAttribute('data-credova-script', '1');
+    document.head.appendChild(s);
+};

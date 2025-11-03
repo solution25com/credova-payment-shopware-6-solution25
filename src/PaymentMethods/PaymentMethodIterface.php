@@ -5,7 +5,7 @@ namespace Credova\PaymentMethods;
 interface PaymentMethodIterface
 {
   /**
-   * Return name of the payment method.
+   * Return the name of the payment method.
    *
    * @return string
    */

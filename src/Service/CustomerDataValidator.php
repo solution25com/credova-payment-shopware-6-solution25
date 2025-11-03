@@ -14,9 +14,6 @@ class CustomerDataValidator
     {
     }
 
-  /**
-   * Validates customer data and returns array of validation errors (field => message).
-   */
     public function validate(string $customerId, Context $context): array
     {
         $errors = [];

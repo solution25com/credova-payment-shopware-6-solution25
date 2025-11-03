@@ -6,6 +6,8 @@ use Credova\Service\ConfigService;
 use Credova\Service\Endpoints;
 use Credova\Service\OrderTransactionMapper\OrderTransactionMapper;
 use Credova\Service\PaymentClientApi;
+use Credova\Exception\CredovaAuthException;
+use Credova\Exception\CredovaApiException;
 use DateTime;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\AbstractPaymentHandler;
@@ -24,7 +26,7 @@ class CredovaHandler extends AbstractPaymentHandler
 
     public function supports(PaymentHandlerType $type, string $paymentMethodId, Context $context): bool
     {
-        return false;
+        return true;
     }
 
   /**
@@ -37,15 +39,18 @@ class CredovaHandler extends AbstractPaymentHandler
         $order = $this->orderTransactionMapper->getOrderTransactionsById($transaction->getOrderTransactionId(), $context)->getOrder();
         $callbackUrl = Endpoints::callbackUrl($request->getSchemeAndHttpHost());
         $billingAddress = $order->getBillingAddress();
-        $stateFull = $billingAddress->getCountryState()->getShortCode();
-        $parts = explode('-', $stateFull);
-        $stateShort = end($parts);
+        $stateFull = $billingAddress?->getCountryState()?->getShortCode() ?? '';
+        $stateShort = '';
+        if (!empty($stateFull)) {
+            $parts = explode('-', $stateFull);
+            $stateShort = end($parts);
+        }
         $birthday = $order->getOrderCustomer()->getCustomer()->getBirthday();
         $birthdayString = $birthday instanceof \DateTimeInterface ? $birthday->format('Y-m-d') : null;
         $response = [];
 
         $transactionId = $transaction->getOrderTransactionId();
-        $customToken = $transaction->getOrderTransactionId() . '-' . hash_hmac('sha256', $order->getId(), $_ENV['APP_SECRET']);
+        $customToken = $transaction->getOrderTransactionId() . '-' . hash_hmac('sha256', $order->getId(), (getenv('APP_SECRET') ?: ($_ENV['APP_SECRET'] ?? '')));
 
         $returnUrlOnCancel = sprintf(
             '%s/credova/cancel/%s/%s/%s',
@@ -55,7 +60,7 @@ class CredovaHandler extends AbstractPaymentHandler
             $customToken
         );
 
-        if ($this->isValidDOB($birthdayString)) {
+        if ($this->isValidDOB($birthdayString) && !empty($stateShort)) {
             $body = [
             'storeCode' => $storeCode,
             'firstName' => $billingAddress->getFirstName(),
@@ -87,12 +92,17 @@ class CredovaHandler extends AbstractPaymentHandler
                 ];
             }
 
-            $response = $this->paymentClientApi->createApplication($body, $salesChannelId, $callbackUrl);
+            try {
+                $response = $this->paymentClientApi->createApplication($body, $salesChannelId, $callbackUrl);
+            } catch (CredovaAuthException | CredovaApiException $e) {
+                $this->transactionStateHandler->fail($transaction->getOrderTransactionId(), $context);
+                throw $e;
+            }
         }
 
         if (empty($response['publicId'])) {
             $this->transactionStateHandler->fail($transaction->getOrderTransactionId(), $context);
-            throw new \Exception('Credova API returned an error while processing payment');
+            throw new CredovaApiException('Unable to process payment. Please verify date of birth and state.');
         }
 
         $this->orderTransactionMapper->setCredovaCustomFieldFromOrder(

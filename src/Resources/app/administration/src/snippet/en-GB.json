@@ -64,5 +64,27 @@
       "saveConfigs": "Save Configurations",
       "settings": "Settings"
     }
+  },
+
+  "Credova": {
+    "apiTest": {
+      "credovaAPI": {
+        "test-api-connection": "Test API Connection"
+      },
+      "success": {
+        "title": "Connection Successful",
+        "notification-message": "Successfully connected to all configured sales channels.",
+        "notification-specific-channel": "Successfully connected to the following sales channels:"
+      },
+      "error": {
+        "title": "Connection Error",
+        "notification-specific": "Failed to connect to the following sales channels:"
+      },
+      "fallbackError": {
+        "title": "Unexpected Error",
+        "message": "An unexpected error occurred while testing the API connection. Please try again later."
+      }
+    }
   }
+
 }

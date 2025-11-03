@@ -3,7 +3,7 @@
 
     <div class="credova-accordion-container">
         {% if credova.errors is defined and credova.errors|length > 0 %}
-            <button type="button" class="accordion"> ⚠️ Credova Validation</button>
+            <button type="button" class="accordion"> Credova validation</button>
             <div class="panel credova-error-panel">
                 <ul class="credova-error-list">
                     {% for field, message in credova.errors %}
@@ -19,14 +19,12 @@
 
     <template credova-payment-pay-later></template>
 
-    <div id="credova-payment-pay-later"
-         data-credova-payment-pay-later="true"
+    <div data-credova-payment-pay-later="true"
          data-store-code="{{ credova.storeCode }}"
          data-mode="{{ credova.mode }}"
             {% if credova.errors is defined %}
                 data-errors='{{ credova.errors|json_encode }}'
             {% endif %}
     >
-        <script src="https://plugin.credova.com/plugin.min.js"></script>
     </div>
 {% endif %}

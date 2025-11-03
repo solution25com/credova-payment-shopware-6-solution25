@@ -48,6 +48,10 @@
             <placeholder>Enter your Store Code</placeholder>
         </input-field>
 
+        <component name="credova-api-test">
+            <name>CredovaApiTest</name>
+        </component>
+
     </card>
 
 </config>

@@ -2,7 +2,7 @@
 
 namespace Credova\Service\OrderTransactionMapper;
 
-use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
+use Credova\Library\Constants\CredovaFields;
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -38,28 +38,31 @@ class OrderTransactionMapper
     {
         $this->orderRepository->update([[
         'id' => $order->getId(),
-        'customFields' => $credovaData,
+        'customFields' => array_merge(
+            $order->getCustomFields() ?? [],
+            $credovaData
+        ),
         ]], $context);
     }
 
     public function updateCredovaFieldsFromWebhook(OrderEntity $order, Context $context, array $webhookData): void
     {
         $fieldsToStore = [
-        'credovaApplicationId' => $webhookData['applicationId'],
-        'credovaPublicId' => $webhookData['publicId'],
-        'credovaPhone' => $webhookData['phone'],
-        'credovaStatus' => $webhookData['status'],
-        'credovaApprovalAmount' => $webhookData['approvalAmount'] ?? null,
-        'credovaBorrowedAmount' => $webhookData['borrowedAmount'] ?? null,
-        'credovaTotalInStorePayment' => $webhookData['totalInStorePayment'] ?? null,
-        'credovaInvoiceAmount' => $webhookData['invoiceAmount'] ?? null,
-        'credovaLenderCode' => $webhookData['lenderCode'] ?? null,
-        'credovaLenderName' => $webhookData['lenderName'] ?? null,
-        'credovaLenderDisplayName' => $webhookData['lenderDisplayName'] ?? null,
-        'credovaFinancingPartnerCode' => $webhookData['financingPartnerCode'] ?? null,
-        'credovaFinancingPartnerName' => $webhookData['financingPartnerName'] ?? null,
-        'credovaFinancingPartnerDisplayName' => $webhookData['financingPartnerDisplayName'] ?? null,
-        'credovaOfferId' => $webhookData['offerId'] ?? null,
+        CredovaFields::ORDER_CF_APPLICATION_ID => $webhookData['applicationId'],
+        CredovaFields::ORDER_CF_PUBLIC_ID => $webhookData['publicId'],
+        CredovaFields::ORDER_CF_PHONE => $webhookData['phone'],
+        CredovaFields::ORDER_CF_STATUS => $webhookData['status'],
+        CredovaFields::ORDER_CF_APPROVAL_AMOUNT => $webhookData['approvalAmount'] ?? null,
+        CredovaFields::ORDER_CF_BORROWED_AMOUNT => $webhookData['borrowedAmount'] ?? null,
+        CredovaFields::ORDER_CF_TOTAL_IN_STORE_PAYMENT => $webhookData['totalInStorePayment'] ?? null,
+        CredovaFields::ORDER_CF_INVOICE_AMOUNT => $webhookData['invoiceAmount'] ?? null,
+        CredovaFields::ORDER_CF_LENDER_CODE => $webhookData['lenderCode'] ?? null,
+        CredovaFields::ORDER_CF_LENDER_NAME => $webhookData['lenderName'] ?? null,
+        CredovaFields::ORDER_CF_LENDER_DISPLAY_NAME => $webhookData['lenderDisplayName'] ?? null,
+        CredovaFields::ORDER_CF_FP_CODE => $webhookData['financingPartnerCode'] ?? null,
+        CredovaFields::ORDER_CF_FP_NAME => $webhookData['financingPartnerName'] ?? null,
+        CredovaFields::ORDER_CF_FP_DISPLAY_NAME => $webhookData['financingPartnerDisplayName'] ?? null,
+        CredovaFields::ORDER_CF_OFFER_ID => $webhookData['offerId'] ?? null,
         ];
 
         $this->orderRepository->update([[
@@ -74,11 +77,11 @@ class OrderTransactionMapper
     public function updateCredovaCustomer(OrderEntity $order, Context $context, array $webhookData): void
     {
         $fieldToStore = [
-        'credovaApplicationId' => $webhookData['applicationId'],
-        'credovaPublicId' => $webhookData['publicId'],
-        'credovaPhone' => $webhookData['phone'],
-        'credovaApprovalAmount' => $webhookData['approvalAmount'] ?? null,
-        'credovaBorrowedAmount' => $webhookData['borrowedAmount'] ?? null,
+        CredovaFields::CUSTOMER_CF_APPLICATION_ID => $webhookData['applicationId'],
+        CredovaFields::CUSTOMER_CF_PUBLIC_ID => $webhookData['publicId'],
+        CredovaFields::CUSTOMER_CF_PHONE => $webhookData['phone'],
+        CredovaFields::CUSTOMER_CF_APPROVAL_AMOUNT => $webhookData['approvalAmount'] ?? null,
+        CredovaFields::CUSTOMER_CF_BORROWED_AMOUNT => $webhookData['borrowedAmount'] ?? null,
         ];
 
         $this->customerRepository->update([[

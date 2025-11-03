@@ -53,6 +53,19 @@
             <argument type="service" id="customer.repository" />
         </service>
 
+        <service id="Credova\Storefront\Controller\TestApiConnectionController" public="true">
+            <argument type="service" id="Credova\Service\TestConnectionService" />
+            <call method="setContainer">
+                <argument type="service" id="service_container"/>
+            </call>
+        </service>
+
+        <service id="Credova\Service\TestConnectionService" public="true">
+            <argument type="service" id="Credova\Service\PaymentClientApi" />
+            <argument type="service" id="sales_channel.repository"/>
+        </service>
+
+
 
         <service id="Credova\Storefront\Controller\WebhookController" public="true">
             <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>

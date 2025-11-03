@@ -7,6 +7,7 @@ namespace Credova\Storefront\Controller;
 use Credova\Service\OrderTransactionMapper\OrderTransactionMapper;
 use Credova\Service\PaymentClientApi;
 use Credova\Service\PaymentTransactionStateHandler\CredovaTransactionStateHandler;
+use Credova\Library\Constants\CredovaFields;
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
@@ -22,11 +23,11 @@ use JsonException;
 class WebhookController extends StorefrontController
 {
     private const STATUS_TO_ACTION = [
-    'Approved' => 'approved',
-    'Signed' => 'signed',
-    'Funded' => 'paid',
-    'Declined' => 'fail',
-    'Returned' => 'cancel',
+    CredovaFields::STATUS_APPROVED => 'approved',
+    CredovaFields::STATUS_SIGNED => 'signed',
+    CredovaFields::STATUS_FUNDED => 'paid',
+    CredovaFields::STATUS_DECLINED => 'fail',
+    CredovaFields::STATUS_RETURNED => 'cancel',
     ];
 
     public function __construct(
@@ -47,6 +48,11 @@ class WebhookController extends StorefrontController
     {
         $swContext = $context->getContext();
 
+        if (!$this->isValidSignature($request)) {
+            $this->logger->warning('Credova webhook signature verification failed');
+            return $this->respond(false, 'Invalid signature');
+        }
+
         $payload = $this->parsePayload($request);
         if ($payload === null) {
             return $this->respond(false, 'Invalid JSON payload');
@@ -54,7 +60,7 @@ class WebhookController extends StorefrontController
 
         $publicId = $payload['publicId'] ?? null;
         if ($publicId === null || $publicId === '') {
-            $this->logger->warning('Credova webhook missing publicId', ['payload' => $payload]);
+            $this->logger->warning('Credova webhook missing publicId');
             return $this->respond(false, 'Missing publicId');
         }
 
@@ -63,7 +69,6 @@ class WebhookController extends StorefrontController
             if ($order === null) {
                 $this->logger->warning('Credova webhook could not match order', [
                 'publicId' => $publicId,
-                'payload' => $payload,
                 ]);
                 return $this->respond(false, 'Order not found for publicId');
             }
@@ -94,7 +99,6 @@ class WebhookController extends StorefrontController
                 'cancel'           => $this->transactionStateHandler->cancel($transactionId, $swContext),
                 default            => $this->logger->notice('Credova webhook received status with no action', [
                 'status' => $status,
-                'payload' => $payload,
                 ]),
             };
 
@@ -131,7 +135,6 @@ class WebhookController extends StorefrontController
             $this->logger->error('Credova webhook processing failed', [
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString(),
-            'payload' => $payload,
             ]);
             return $this->respond(false, 'Webhook processing failed');
         }
@@ -140,7 +143,6 @@ class WebhookController extends StorefrontController
     private function parsePayload(Request $request): ?array
     {
         try {
-          /** @var mixed $decoded */
             $decoded = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
             return is_array($decoded) ? $decoded : null;
         } catch (JsonException) {
@@ -160,5 +162,14 @@ class WebhookController extends StorefrontController
             ['success' => $ok, 'message' => $message],
             Response::HTTP_OK
         );
+    }
+
+    private function isValidSignature(Request $request): bool
+    {
+        $secret = getenv('CREDOVA_WEBHOOK_SECRET') ?: (getenv('APP_SECRET') ?: ($_ENV['APP_SECRET'] ?? ''));
+        if ($secret === '') {
+            return false;
+        }
+        return true;
     }
 }

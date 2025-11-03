@@ -18,7 +18,12 @@ class CredovaCancelController extends AbstractController
     #[Route(path: '/credova/cancel/{orderTransactionId}/{orderId}/{token}', name: 'frontend.credova.cancel', methods: ['GET'])]
     public function cancel(string $orderTransactionId, string $orderId, string $token, Context $context): RedirectResponse
     {
-        $expectedToken = $orderTransactionId . '-' . hash_hmac('sha256', $orderId, $_ENV['APP_SECRET']);
+        $secret = getenv('APP_SECRET') ?: ($_ENV['APP_SECRET'] ?? '');
+        if ($secret === '') {
+            throw $this->createAccessDeniedException('Application secret not configured.');
+        }
+
+        $expectedToken = $orderTransactionId . '-' . hash_hmac('sha256', $orderId, $secret);
 
         if (!hash_equals($expectedToken, $token)) {
             throw $this->createAccessDeniedException('Invalid cancel token.');

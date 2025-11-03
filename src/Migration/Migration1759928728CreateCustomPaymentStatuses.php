@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Credova\Migration;
 
 use Doctrine\DBAL\Connection;
-use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\Framework\Migration\MigrationStep;
 
 /**

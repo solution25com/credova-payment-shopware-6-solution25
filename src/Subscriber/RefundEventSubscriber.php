@@ -4,12 +4,15 @@ namespace Credova\Subscriber;
 
 use Credova\Gateways\CredovaHandler;
 use Credova\Service\PaymentClientApi;
+use Credova\Exception\CredovaApiException;
+use Credova\Library\Constants\CredovaFields;
 use Shopware\Core\Checkout\Order\Event\OrderStateMachineStateChangeEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Psr\Log\LoggerInterface;
 
 class RefundEventSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private readonly PaymentClientApi $paymentClient)
+    public function __construct(private readonly PaymentClientApi $paymentClient, private readonly LoggerInterface $logger)
     {
     }
 
@@ -36,11 +39,11 @@ class RefundEventSubscriber implements EventSubscriberInterface
 
         $customFields = $order->getCustomFields() ?? [];
 
-        if (($customFields['credovaStatus'] ?? null) !== 'Signed' || empty($customFields['credovaPublicId'])) {
+        if (($customFields[CredovaFields::ORDER_CF_STATUS] ?? null) !== CredovaFields::STATUS_SIGNED || empty($customFields[CredovaFields::ORDER_CF_PUBLIC_ID])) {
             return;
         }
 
-        $publicId = $customFields['credovaPublicId'];
+        $publicId = $customFields[CredovaFields::ORDER_CF_PUBLIC_ID];
         $payload = [
         'agentName'  => $customFields['credovaAgentName'] ?? 'Edon Agent',
         'phone'      => $customFields['credovaPhone'] ?? null,
@@ -55,6 +58,10 @@ class RefundEventSubscriber implements EventSubscriberInterface
             }
         }
 
-        $this->paymentClient->returnApplication($publicId, $payload);
+        try {
+            $this->paymentClient->returnApplication($publicId, $payload);
+        } catch (CredovaApiException $e) {
+            $this->logger->warning('Credova return application failed', ['reason' => $e->getMessage(), 'publicId' => $publicId]);
+        }
     }
 }
