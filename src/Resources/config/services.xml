@@ -27,6 +27,7 @@
 
         <service id="Credova\Subscriber\RefundEventSubscriber">
             <argument type="service" id="Credova\Service\PaymentClientApi" />
+            <argument type="service" id="CredovaPayment.logger"/>
             <tag name="kernel.event_subscriber"/>
         </service>
 
