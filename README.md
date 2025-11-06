@@ -25,7 +25,6 @@ Credova allows customers to apply for financing and pay over time — offering m
 
 ##  Compatibility
 - ✅ **Shopware 6.6.x**
-- ✅ **Shopware 6.7.x**
 
 ---
 
