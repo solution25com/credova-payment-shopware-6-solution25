@@ -2,7 +2,7 @@
     "name": "credova/credova",
     "description": "Credova payment integration for Shopware 6",
     "type": "shopware-platform-plugin",
-    "version": "1.1.8",
+    "version": "1.2.1",
     "license": "proprietary",
     "authors": [
         {
