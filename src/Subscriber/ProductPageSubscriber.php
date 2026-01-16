@@ -31,9 +31,9 @@ class ProductPageSubscriber implements EventSubscriberInterface
         $storeCode = $this->configs->getConfig('storeCode', $salesChannelId);
         $dataMessage = $this->configs->getConfig('dataMessage', $salesChannelId);
         $showCredovaLogo = $this->configs->getConfig('showCredovaLogo', $salesChannelId);
-          foreach ($event->getEntities() as $entity) {
+        foreach ($event->getEntities() as $entity) {
             if (!$entity instanceof SalesChannelProductEntity) {
-              continue;
+                continue;
             }
 
             $entity->addExtension('credovaFinance', new ArrayStruct([
@@ -43,7 +43,7 @@ class ProductPageSubscriber implements EventSubscriberInterface
             'dataMessage' => $dataMessage,
             'showCredovaLogo' => $showCredovaLogo,
             'mode' => $mode,
-          ]));
+            ]));
         }
     }
 }

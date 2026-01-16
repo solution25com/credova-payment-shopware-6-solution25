@@ -18,26 +18,27 @@ readonly class TestConnectionService
     ) {
     }
 
-  public function testAllConnections(Context $context): array|bool
-  {
-    $salesChannels = $this->salesChannelRepository->search(new Criteria(), $context);
-    $results = [];
+    public function testAllConnections(Context $context): array|bool
+    {
+        $salesChannels = $this->salesChannelRepository->search(new Criteria(), $context);
+        $results = [];
 
-    if (!$salesChannels->getEntities() instanceof SalesChannelCollection) {
-      return false;
+        if (!$salesChannels->getEntities() instanceof SalesChannelCollection) {
+            return false;
+        }
+
+      /** @var SalesChannelEntity $salesChannel */
+        foreach ($salesChannels as $salesChannel) {
+            $id = $salesChannel->getId();
+            $name = $salesChannel->getTranslation('name') ?? $salesChannel->getName();
+
+            try {
+                $results[$name] = $this->paymentClientApi->testConnection($id);
+            } catch (\Throwable $e) {
+                $results[$name] = false;
+            }
+        }
+
+        return $results;
     }
-
-    /** @var SalesChannelEntity $salesChannel */
-    foreach ($salesChannels as $salesChannel) {
-      $id = $salesChannel->getId();
-      $name = $salesChannel->getTranslation('name') ?? $salesChannel->getName();
-
-      try {
-        $results[$name] = $this->paymentClientApi->testConnection($id);
-      } catch (\Throwable $e) {
-        $results[$name] = false;
-      }
-    }
-
-    return $results;
-  }}
+}

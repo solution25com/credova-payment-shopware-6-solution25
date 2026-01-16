@@ -79,49 +79,48 @@ class CredovaHandler extends AbstractPaymentHandler
             'zipCode' => $billingAddress->getZipCode(),
             ],];
 
-          $body['products'] = [];
-          $totalTax = 0.0;
+            $body['products'] = [];
+            $totalTax = 0.0;
 
-          foreach ($order->getLineItems() as $lineItem) {
+            foreach ($order->getLineItems() as $lineItem) {
+                $calculatedTaxes = $lineItem->getPrice()->getCalculatedTaxes();
+                $taxAmount = 0.0;
 
-            $calculatedTaxes = $lineItem->getPrice()->getCalculatedTaxes();
-            $taxAmount = 0.0;
+                if ($calculatedTaxes && !empty($calculatedTaxes->getElements())) {
+                    $elements = $calculatedTaxes->getElements();
+                    $first = reset($elements);
+                    $taxAmount = (float) $first->getTax();
+                }
 
-            if ($calculatedTaxes && !empty($calculatedTaxes->getElements())) {
-              $elements = $calculatedTaxes->getElements();
-              $first = reset($elements);
-              $taxAmount = (float) $first->getTax();
+                $totalTax += $taxAmount;
+
+                $body['products'][] = [
+                'id' => $lineItem->getId(),
+                'description' => $lineItem->getLabel(),
+                'serialNumber' => $lineItem->getPayload()['productNumber'] ?? $lineItem->getId(),
+                'quantity' => (string)$lineItem->getQuantity(),
+                'value' => $lineItem->getTotalPrice()
+                ];
             }
 
-            $totalTax += $taxAmount;
+            $shipping = (float) $order->getShippingTotal();
 
             $body['products'][] = [
-              'id' => $lineItem->getId(),
-              'description' => $lineItem->getLabel(),
-              'serialNumber' => $lineItem->getPayload()['productNumber'] ?? $lineItem->getId(),
-              'quantity' => (string)$lineItem->getQuantity(),
-              'value' => number_format($lineItem->getTotalPrice() - $taxAmount, 2, '.', '')
-            ];
-          }
-
-          $shipping = (float) $order->getShippingTotal();
-
-          $body['products'][] = [
             'id' => 'shipping',
             'description' => 'Shipping',
             'quantity' => '1',
             'value' => number_format($shipping, 2, '.', '')
-          ];
+            ];
 
-          $body['products'][] = [
+            $body['products'][] = [
             'id' => 'sales_tax',
             'description' => 'Sales Tax',
             'quantity' => '1',
             'value' => number_format($totalTax, 2, '.', '')
-          ];
+            ];
 
 
-          try {
+            try {
                 $response = $this->paymentClientApi->createApplication($body, $salesChannelId, $callbackUrl);
             } catch (CredovaAuthException | CredovaApiException $e) {
                 $this->transactionStateHandler->fail($transaction->getOrderTransactionId(), $context);

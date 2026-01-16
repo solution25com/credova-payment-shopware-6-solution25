@@ -31,6 +31,8 @@ class CredovaCancelController extends AbstractController
 
         $this->transactionStateHandler->fail($orderTransactionId, $context);
 
+        $this->addFlash('danger', 'Your Credova application was cancelled—please choose another payment method.');
+
         return new RedirectResponse("/account/order/edit/{$orderId}?credovaCancel=true");
     }
 }
