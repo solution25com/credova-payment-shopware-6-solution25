@@ -27,21 +27,25 @@
 
         <service id="Credova\Subscriber\RefundEventSubscriber">
             <argument type="service" id="Credova\Service\PaymentClientApi" />
-            <argument type="service" id="CredovaPayment.logger"/>
+            <argument type="service" id="order_return.repository" on-invalid="null"/>
             <tag name="kernel.event_subscriber"/>
         </service>
 
         <service id="Credova\Subscriber\ProductPageSubscriber">
             <argument type="service" id="Credova\Service\ConfigService" />
+            <argument type="service" id="request_stack" />
             <tag name="kernel.event_subscriber"/>
         </service>
 
         <service id="Credova\Service\PaymentClientApi">
             <argument type="service" id="Credova\Service\ConfigService" />
+            <argument type="service" id="cache.app" />
+            <argument type="service" id="CredovaPayment.logger"/>
         </service>
 
         <service id="Credova\Service\PaymentTransactionStateHandler\CredovaTransactionStateHandler">
             <argument type="service" id="Shopware\Core\System\StateMachine\StateMachineRegistry"/>
+            <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler" />
         </service>
 
         <service id="Credova\Service\ConfigService">
@@ -54,25 +58,13 @@
             <argument type="service" id="customer.repository" />
         </service>
 
-        <service id="Credova\Storefront\Controller\TestApiConnectionController" public="true">
-            <argument type="service" id="Credova\Service\TestConnectionService" />
-            <call method="setContainer">
-                <argument type="service" id="service_container"/>
-            </call>
-        </service>
-
-        <service id="Credova\Service\TestConnectionService" public="true">
-            <argument type="service" id="Credova\Service\PaymentClientApi" />
-            <argument type="service" id="sales_channel.repository"/>
-        </service>
-
-
 
         <service id="Credova\Storefront\Controller\WebhookController" public="true">
             <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
             <argument type="service" id="Credova\Service\PaymentTransactionStateHandler\CredovaTransactionStateHandler" />
             <argument type="service" id="Credova\Service\OrderTransactionMapper\OrderTransactionMapper"/>
             <argument type="service" id="Credova\Service\PaymentClientApi" />
+            <argument type="service" id="Credova\Service\ConfigService" />
             <argument type="service" id="CredovaPayment.logger"/>
             <call method="setContainer">
                 <argument type="service" id="service_container"/>
@@ -80,7 +72,9 @@
         </service>
 
         <service id="Credova\Storefront\Controller\CredovaCancelController" public="true">
-            <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
+            <argument type="service" id="Credova\Service\PaymentTransactionStateHandler\CredovaTransactionStateHandler" />
+            <argument type="service" id="Credova\Service\ConfigService" />
+            <argument type="service" id="Credova\Service\OrderTransactionMapper\OrderTransactionMapper" />
             <call method="setContainer">
                 <argument type="service" id="service_container"/>
             </call>

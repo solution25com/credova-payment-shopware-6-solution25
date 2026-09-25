@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Credova\Service;
 
 use DateTime;
@@ -14,7 +16,10 @@ class CustomerDataValidator
     {
     }
 
-    public function validate(string $customerId, Context $context): array
+    /**
+     * Validates customer data and returns array of validation errors (field => message).
+     */
+    public function validate(?string $customerId, Context $context): array
     {
         $errors = [];
 
@@ -33,7 +38,7 @@ class CustomerDataValidator
         $criteria->addAssociation('activeShippingAddress');
         $criteria->addAssociation('addresses');
 
-        $customer = $this->customerRepository->search($criteria, $context)->first();
+        $customer = $this->customerRepository->search($criteria, $context)->getEntities()->first();
 
         if (!$customer instanceof CustomerEntity) {
             return ['customer' => 'Customer not found.'];
@@ -103,7 +108,7 @@ class CustomerDataValidator
         $birthdayString = $birthday instanceof \DateTimeInterface ? $birthday->format('Y-m-d') : null;
 
         if (!$this->isValidDOB($birthdayString)) {
-            $errors['birthday'] = 'Customer must be at least 18 years old.';
+            $errors['birthday'] = 'Credova requires a date of birth for financing. Please go to your Account Profile to add your birthdate and then try again.';
         }
 
         return $errors;

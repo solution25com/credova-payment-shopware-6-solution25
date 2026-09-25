@@ -28,8 +28,8 @@
 			<p class="credova-button"
 			   data-amount="{{ unitPrice }}"
 			   data-type="popup"
-			   data-hide-brand={{showCredovaLogo}}
-			   data-message={{dataMessage}}>
+               data-hide-brand="{{ showCredovaLogo ? 'true' : 'false' }}"
+               data-message="{{ dataMessage|e('html_attr') }}">
 			</p>
 		</div>
 	{% endif %}

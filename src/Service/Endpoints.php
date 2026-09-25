@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Credova\Service;
 
 abstract class Endpoints
@@ -15,28 +17,28 @@ abstract class Endpoints
     private static array $endpoints = [
     self::AUTH_TOKEN => [
       'method'  => 'POST',
-      'url' => '/v2/token'
+      'url' => '/v2/token',
     ],
     self::GET_STORE => [
       'method' => 'GET',
-      'url' => '/v2/Stores'
+      'url' => '/v2/Stores',
     ],
     self::CREATE_APPLICATIONS => [
       'method' => 'POST',
-      'url' => '/v2/applications'
+      'url' => '/v2/applications',
     ],
     self::RETURN_APPLICATIONS => [
       'method' => 'POST',
-      'url' => '/v2/applications/{publicId}/requestreturn'
+      'url' => '/v2/applications/{publicId}/requestreturn',
     ],
     self::DELIVERY_INFORMATION => [
       'method' => 'POST',
-      'url' => '/v2/applications/{publicId}/deliveryinformation'
+      'url' => '/v2/applications/{publicId}/deliveryinformation',
     ],
     self::REFERENCES_TO_ORDER => [
       'method' => 'POST',
-      'url' => '/v2/applications/{publicId}/orders'
-    ]
+      'url' => '/v2/applications/{publicId}/orders',
+    ],
     ];
 
     protected static function getEndpoint(string $endpoint): array
@@ -49,7 +51,7 @@ abstract class Endpoints
         return rtrim($domain, '/') . '/' . self::WEBHOOK;
     }
 
-    public static function buildApplicationUrl(string $publicId, $endpoint): array
+    public static function buildApplicationUrl(string $publicId, array $endpoint): array
     {
         return [
         'method' => $endpoint['method'],

@@ -63,43 +63,52 @@ class Credova extends Plugin
         'technicalName' => $paymentMethod->getTechnicalName(),
         ];
 
-        $this->container->get('payment_method.repository')->create([$credovaPaymentData], $context);
+        $paymentRepository = $this->container->get('payment_method.repository');
+        $paymentRepository->create([$credovaPaymentData], $context);
     }
 
 
     private function setPaymentMethodIsActive(bool $active, Context $context): void
     {
-        $id = $this->getPaymentMethodId($context);
-        if (!$id) {
+        $paymentRepository = $this->container->get('payment_method.repository');
+
+        $paymentMethodId = $this->getPaymentMethodId($context);
+
+        if (!$paymentMethodId) {
             return;
         }
 
-        $this->container->get('payment_method.repository')->update([
-          ['id' => $id, 'active' => $active],
-        ], $context);
+        $paymentMethod = [
+        'id' => $paymentMethodId,
+        'active' => $active,
+        ];
+
+        $paymentRepository->update([$paymentMethod], $context);
     }
 
     private function getPaymentMethodId(Context $context): ?string
     {
-        $criteria = (new Criteria())->addFilter(
-            new EqualsFilter('handlerIdentifier', CredovaPaymentMethod::class)
+        $paymentRepository = $this->container->get('payment_method.repository');
+
+        $paymentCriteria = (new Criteria())->addFilter(
+            new EqualsFilter('handlerIdentifier', (new CredovaPaymentMethod())->getHandlerIdentifier())
         );
 
-        return $this->container
-          ->get('payment_method.repository')
-          ->searchIds($criteria, $context)
-          ->firstId();
+        return $paymentRepository->searchIds($paymentCriteria, $context)->firstId();
     }
 
     public function update(UpdateContext $updateContext): void
     {
+        parent::update($updateContext);
     }
 
     public function postInstall(InstallContext $installContext): void
     {
+        parent::postInstall($installContext);
     }
 
     public function postUpdate(UpdateContext $updateContext): void
     {
+        parent::postUpdate($updateContext);
     }
 }

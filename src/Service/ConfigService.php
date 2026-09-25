@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Credova\Service;
 
 use Shopware\Core\System\SystemConfig\SystemConfigService;

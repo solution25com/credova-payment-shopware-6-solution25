@@ -5,7 +5,7 @@
          executionOrder="random">
     <coverage>
         <include>
-            <directory>./src/</directory>
+            <directory suffix=".php">./src/</directory>
         </include>
     </coverage>
     <php>
@@ -17,7 +17,7 @@
     </php>
     <testsuites>
         <testsuite name="Credova Testsuite">
-            <directory>tests</directory>
+            <directory>tests/Unit</directory>
         </testsuite>
     </testsuites>
 </phpunit>

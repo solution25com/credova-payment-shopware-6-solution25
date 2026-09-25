@@ -1,30 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Credova\PaymentMethods;
 
 use Credova\Gateways\CredovaHandler;
 
 class CredovaPaymentMethod
 {
-  /**
-   * @inheritDoc
-   */
+    /**
+     * @inheritDoc
+     */
     public function getName(): string
     {
         return 'Credova Payment';
     }
 
-  /**
-   * @inheritDoc
-   */
+    /**
+     * @inheritDoc
+     */
     public function getDescription(): string
     {
         return 'Credova buy now Pay later';
     }
 
-  /**
-   * @inheritDoc
-   */
+    /**
+     * @inheritDoc
+     */
     public function getHandlerIdentifier(): string
     {
         return CredovaHandler::class;

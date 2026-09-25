@@ -48,10 +48,50 @@
             <placeholder>Enter your Store Code</placeholder>
         </input-field>
 
-        <component name="credova-api-test">
-            <name>CredovaApiTest</name>
-        </component>
+    </card>
 
+
+    <card>
+        <title>Final State for Transaction</title>
+        <input-field type="single-select">
+            <name>finalTransactionState</name>
+            <label>By default, the transaction will transition to → Paid</label>
+            <options>
+                <option>
+                    <id>paid</id>
+                    <name>Paid</name>
+                </option>
+                <option>
+                    <id>signed</id>
+                    <name>Signed</name>
+                </option>
+            </options>
+            <defaultValue>paid</defaultValue>
+            <helpText>Select the final state that the transaction should transition to.</helpText>
+        </input-field>
+    </card>
+
+    <card>
+        <title>Webhook &amp; Security</title>
+        <title lang="de-DE">Webhook &amp; Sicherheit</title>
+
+        <input-field type="text">
+            <name>webhookExecuteToken</name>
+            <label>Webhook Execute Token</label>
+            <label lang="de-DE">Webhook Execute Token</label>
+            <placeholder>e.g. a long random string (32+ chars)</placeholder>
+            <helpText>Required. Create a random secret (e.g. 32+ characters). Credova must call your webhook with this value in the URL: https://your-shop.com/credova/webhook?token=YOUR_TOKEN_HERE. Give this full URL (with your token) to Credova for the Callback-Url when creating applications.</helpText>
+            <helpText lang="de-DE">Pflicht. Erzeugen Sie einen zufälligen Wert (z. B. 32+ Zeichen). Credova muss die Webhook-URL mit ?token=IHR_TOKEN aufrufen.</helpText>
+        </input-field>
+
+        <input-field type="password">
+            <name>appSecret</name>
+            <label>Application Secret (cancel URL signing)</label>
+            <label lang="de-DE">Anwendungsgeheimnis (Cancel-Link)</label>
+            <placeholder>Any secret string only your shop knows</placeholder>
+            <helpText>Required. A secret string used to sign the "cancel" link sent to Credova (so customers cannot forge cancel URLs). Choose any strong random value and keep it private—it is not from Credova.</helpText>
+            <helpText lang="de-DE">Pflicht. Geheimer Wert zum Signieren des Abbruch-Links. Beliebiger sicherer Zufallswert, nicht von Credova.</helpText>
+        </input-field>
     </card>
 
 </config>

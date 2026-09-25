@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Credova\Storefront\Struct;
 
 use Shopware\Core\Framework\Struct\Struct;

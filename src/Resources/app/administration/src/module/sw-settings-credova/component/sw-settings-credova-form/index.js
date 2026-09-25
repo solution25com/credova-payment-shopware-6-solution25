@@ -25,8 +25,8 @@ Component.register('sw-settings-credova-form', {
     },
     computed: {
         isCustomTextFilled() {
-            const value = this.config?.['Credova.config.dataMessage'] ?? '';
-            return typeof value === 'string' && value.trim().length > 0;
+            const value = this.config?.['Credova.config.dataMessage'];
+            return value !== null && value !== undefined && typeof value === 'string' && value.trim().length > 0;
         }
     },
 
@@ -48,7 +48,7 @@ Component.register('sw-settings-credova-form', {
         enforceLogoRule() {
             if (this.isCustomTextFilled) {
                 if (this.config['Credova.config.showCredovaLogo'] !== true) {
-                    this.$set(this.config, 'Credova.config.showCredovaLogo', true);
+                    this.config['Credova.config.showCredovaLogo'] = true;
                 }
             }
         },
@@ -73,8 +73,8 @@ Component.register('sw-settings-credova-form', {
                 if (this.config['Credova.config.checkoutFlow'] !== undefined) {
                     this.config['Credova.config.checkoutFlow'] = String(this.config['Credova.config.checkoutFlow']);
                 }
-                if (this.config['Credova.config.dataMessage'] == null) {
-                    this.$set(this.config, 'Credova.config.dataMessage', '');
+                if (this.config['Credova.config.dataMessage'] === null || this.config['Credova.config.dataMessage'] === undefined) {
+                    this.config['Credova.config.dataMessage'] = '';
                 }
 
                 this.enforceLogoRule();
@@ -111,8 +111,8 @@ Component.register('sw-settings-credova-form', {
             const dmKey = 'Credova.config.dataMessage';
             const dmVal = payload[dmKey];
 
-            if (typeof dmVal === 'string' && dmVal.trim() === '') {
-                delete payload[dmKey];
+            if (dmVal === null || dmVal === undefined || (typeof dmVal === 'string' && dmVal.trim() === '')) {
+                payload[dmKey] = null;
             }
 
             try {

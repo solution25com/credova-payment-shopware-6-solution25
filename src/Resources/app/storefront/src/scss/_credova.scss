@@ -1,86 +1,100 @@
-.accordion {
-  background-color: #eee;
-  color: #444;
-  cursor: pointer;
-  padding: 14px 18px;
-  width: 100%;
-  border: none;
-  text-align: left;
-  outline: none;
-  font-size: 15px;
-  transition: background-color 0.2s ease;
-  margin-top: 5px;
-  border-radius: 4px;
-  position: relative;
-}
-
-/* Arrow icon */
-.accordion::after {
-  content: '\25BC'; /* ▼ Down arrow */
-  font-size: 12px;
-  color: #777;
-  position: absolute;
-  right: 18px;
-  top: 50%;
-  transform: translateY(-50%);
-  transition: transform 0.3s ease;
-}
-
-/* Rotate icon when active */
-.accordion.active::after {
-  transform: translateY(-50%) rotate(180deg); /* ▲ Up arrow */
-}
-
-.accordion.active,
-.accordion:hover {
-  background-color: #ccc;
-}
-
-.panel {
-  padding: 0 18px;
-  background-color: white;
-  display: none;
-  overflow: hidden;
-  border-left: 2px solid #ccc;
-  border-right: 2px solid #ccc;
-  border-bottom: 2px solid #ccc;
-  border-radius: 0 0 4px 4px;
-  margin-bottom: 10px;
-}
-
-/* Wrap list inside panel with class */
-.panel .credova-error-list {
-  list-style: disc;
-  padding-left: 20px;
-  margin: 10px 0;
-}
-
-.credova-error-item {
-  margin-bottom: 6px;
-}
-
-.credova-error-field {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 2px;
-  font-size: 16px;
-}
-
-.credova-error-message {
-  display: inline-block;
-}
-
 .credova-accordion-container {
-  margin: 20px 0;
-}
+  width:100%;
+  .panel {
+    padding: 0 18px;
+    background-color: white;
+    display: none;
+    overflow: hidden;
+    border-left: 2px solid #ccc;
+    border-right: 2px solid #ccc;
+    border-bottom: 2px solid #ccc;
+    border-radius: 0 0 4px 4px;
+    margin-bottom: 10px;
+  }
 
-.credova-error-box {
-  background-color: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeeba;
-  padding: 16px 20px;
-  border-radius: 6px;
-  margin: 20px 0;
-  font-family: Arial, sans-serif;
-  font-size: 15px;
+  .panel .credova-error-list {
+    list-style: disc;
+    padding-left: 20px;
+    margin: 10px 0;
+  }
+
+  .credova-error-item {
+    margin-bottom: 6px;
+  }
+
+  .credova-error-field {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 2px;
+    font-size: 16px;
+  }
+
+  .credova-error-message {
+    display: inline-block;
+  }
+
+  .credova-accordion-container {
+    margin: 20px 0;
+  }
+
+  .credova-error-box {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+    padding: 16px 20px;
+    border-radius: 6px;
+    margin: 20px 0;
+    font-family: Arial, sans-serif;
+    font-size: 15px;
+  }
+
+  li.credova-error-row {
+    margin-bottom: 15px;
+  }
+
+  .credova-errors-list li {
+    margin-bottom: 30px;
+  }
+
+  .credova-errors-box {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+    border-radius: 6px;
+    padding: 16px 20px;
+    font-size: 15px;
+  }
+
+  .credova-errors-list {
+    padding-left: 20px;
+    margin: 0;
+    list-style-type: none;
+  }
+
+  .credova-error-row {
+    margin-bottom: 6px;
+    list-style-type: none;
+  }
+
+  .credova-error-label {
+    font-weight: 600;
+    display: inline-block;
+    margin-right: 4px;
+  }
+
+  .credova-error-text {
+    display: inline;
+  }
+
+  .credova-error-hint {
+    margin: 4px 0 10px 18px;
+    font-size: 14px;
+  }
+
+  .credova-error-hint a {
+    font-weight: 600;
+    text-decoration: underline;
+  }
+
+
 }

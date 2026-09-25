@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Credova\Gateways;
 
+use Credova\Library\Constants\CredovaFields;
 use Credova\Service\ConfigService;
 use Credova\Service\Endpoints;
 use Credova\Service\OrderTransactionMapper\OrderTransactionMapper;
 use Credova\Service\PaymentClientApi;
-use Credova\Exception\CredovaAuthException;
-use Credova\Exception\CredovaApiException;
 use DateTime;
+use Psr\Log\LoggerInterface;
+use Shopware\Core\Checkout\Order\Aggregate\OrderAddress\OrderAddressEntity;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
+use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\AbstractPaymentHandler;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\PaymentHandlerType;
 use Shopware\Core\Checkout\Payment\Cart\PaymentTransactionStruct;
@@ -20,126 +24,90 @@ use Symfony\Component\HttpFoundation\Request;
 
 class CredovaHandler extends AbstractPaymentHandler
 {
-    public function __construct(private readonly OrderTransactionStateHandler $transactionStateHandler, private readonly PaymentClientApi $paymentClientApi, private readonly OrderTransactionMapper $orderTransactionMapper, private readonly ConfigService $configService)
-    {
+    public function __construct(
+        private readonly OrderTransactionStateHandler $transactionStateHandler,
+        private readonly PaymentClientApi $paymentClientApi,
+        private readonly OrderTransactionMapper $orderTransactionMapper,
+        private readonly ConfigService $configService,
+        private readonly LoggerInterface $logger
+    ) {
     }
 
     public function supports(PaymentHandlerType $type, string $paymentMethodId, Context $context): bool
     {
-        return true;
+        return false;
     }
 
-  /**
-   * @throws \Exception
-   */
     public function pay(Request $request, PaymentTransactionStruct $transaction, Context $context, ?Struct $validateStruct): ?RedirectResponse
     {
         $salesChannelId = $request->attributes->get('sw-sales-channel-id');
-        $storeCode = $this->configService->getConfig('storeCode', $salesChannelId);
-        $order = $this->orderTransactionMapper->getOrderTransactionsById($transaction->getOrderTransactionId(), $context)->getOrder();
-        $callbackUrl = Endpoints::callbackUrl($request->getSchemeAndHttpHost());
-        $billingAddress = $order->getBillingAddress();
-        $stateFull = $billingAddress?->getCountryState()?->getShortCode() ?? '';
-        $stateShort = '';
-        if (!empty($stateFull)) {
-            $parts = explode('-', $stateFull);
-            $stateShort = end($parts);
+        $orderTransaction = $this->orderTransactionMapper->getOrderTransactionsById($transaction->getOrderTransactionId(), $context);
+        if ($orderTransaction === null) {
+            $this->transactionStateHandler->fail($transaction->getOrderTransactionId(), $context);
+            throw new \RuntimeException('Order transaction not found');
         }
-        $birthday = $order->getOrderCustomer()->getCustomer()->getBirthday();
-        $birthdayString = $birthday instanceof \DateTimeInterface ? $birthday->format('Y-m-d') : null;
-        $response = [];
 
-        $transactionId = $transaction->getOrderTransactionId();
-        $customToken = $transaction->getOrderTransactionId() . '-' . hash_hmac('sha256', $order->getId(), (getenv('APP_SECRET') ?: ($_ENV['APP_SECRET'] ?? '')));
+        $order = $orderTransaction->getOrder();
+        if ($order === null) {
+            $this->transactionStateHandler->fail($transaction->getOrderTransactionId(), $context);
+            throw new \RuntimeException('Order not found');
+        }
 
+        $billingAddress = $order->getBillingAddress();
+        if ($billingAddress === null) {
+            $this->transactionStateHandler->fail($transaction->getOrderTransactionId(), $context);
+            throw new \RuntimeException('Billing address missing');
+        }
+
+        $birthdayString = $this->getBirthdayString($order);
+        $stateShort = $this->getBillingStateShort($billingAddress);
+        if ($stateShort === null) {
+            $this->transactionStateHandler->fail($transaction->getOrderTransactionId(), $context);
+            throw new \RuntimeException('Billing state missing');
+        }
+
+        if (!$this->isValidDOB($birthdayString)) {
+            $this->transactionStateHandler->fail($transaction->getOrderTransactionId(), $context);
+            throw new \RuntimeException('Invalid or underage date of birth');
+        }
+
+        $appSecret = $this->configService->getConfig('appSecret', $salesChannelId);
+        $appSecret = $appSecret !== null && $appSecret !== '' ? (string) $appSecret : null;
+        if ($appSecret === null) {
+            $this->transactionStateHandler->fail($transaction->getOrderTransactionId(), $context);
+            throw new \RuntimeException('Application secret not configured');
+        }
+
+        $cancelToken = $transaction->getOrderTransactionId() . '-' . hash_hmac('sha256', $order->getId(), $appSecret);
         $returnUrlOnCancel = sprintf(
             '%s/credova/cancel/%s/%s/%s',
             $request->getSchemeAndHttpHost(),
-            $transactionId,
+            $transaction->getOrderTransactionId(),
             $order->getId(),
-            $customToken
+            $cancelToken
         );
 
-        if ($this->isValidDOB($birthdayString) && !empty($stateShort)) {
-            $body = [
-            'storeCode' => $storeCode,
-            'firstName' => $billingAddress->getFirstName(),
-            'lastName' => $billingAddress->getLastName(),
-            'dateOfBirth' => $birthdayString,
-            'mobilePhone' => $billingAddress->getPhoneNumber(),
-            'email' => $order->getOrderCustomer()->getEmail(),
-            'referenceNumber' => $order->getOrderNumber(),
-            'redirectUrl' => $transaction->getReturnUrl(),
-            'cancelUrl' => $returnUrlOnCancel,
+        $body = $this->buildApplicationBody($order, $billingAddress, $birthdayString, $stateShort, $transaction, $returnUrlOnCancel);
+        $storeCode = $this->configService->getConfig('storeCode', $salesChannelId);
+        $body['storeCode'] = $storeCode;
+        $callbackUrl = Endpoints::callbackUrl($request->getSchemeAndHttpHost());
 
-            'address' => [
-            'street' => $billingAddress->getStreet(),
-            'city' => $billingAddress->getCity(),
-            'state' => $stateShort,
-            'zipCode' => $billingAddress->getZipCode(),
-            ],];
+        $response = $this->paymentClientApi->createApplication($body, (string) $salesChannelId, $callbackUrl);
 
-            $body['products'] = [];
-            $totalTax = 0.0;
-
-            foreach ($order->getLineItems() as $lineItem) {
-                $calculatedTaxes = $lineItem->getPrice()->getCalculatedTaxes();
-                $taxAmount = 0.0;
-
-                if ($calculatedTaxes && !empty($calculatedTaxes->getElements())) {
-                    $elements = $calculatedTaxes->getElements();
-                    $first = reset($elements);
-                    $taxAmount = (float) $first->getTax();
-                }
-
-                $totalTax += $taxAmount;
-
-                $body['products'][] = [
-                'id' => $lineItem->getId(),
-                'description' => $lineItem->getLabel(),
-                'serialNumber' => $lineItem->getPayload()['productNumber'] ?? $lineItem->getId(),
-                'quantity' => (string)$lineItem->getQuantity(),
-                'value' => $lineItem->getTotalPrice()
-                ];
-            }
-
-            $shipping = (float) $order->getShippingTotal();
-
-            $body['products'][] = [
-            'id' => 'shipping',
-            'description' => 'Shipping',
-            'quantity' => '1',
-            'value' => number_format($shipping, 2, '.', '')
-            ];
-
-            $body['products'][] = [
-            'id' => 'sales_tax',
-            'description' => 'Sales Tax',
-            'quantity' => '1',
-            'value' => number_format($totalTax, 2, '.', '')
-            ];
-
-
-            try {
-                $response = $this->paymentClientApi->createApplication($body, $salesChannelId, $callbackUrl);
-            } catch (CredovaAuthException | CredovaApiException $e) {
-                $this->transactionStateHandler->fail($transaction->getOrderTransactionId(), $context);
-                throw $e;
-            }
-        }
-
-        if (empty($response['publicId'])) {
+        if (!empty($response['error'])) {
+            $this->logger->error('Credova API error', ['message' => $response['error']]);
             $this->transactionStateHandler->fail($transaction->getOrderTransactionId(), $context);
-            throw new CredovaApiException('Unable to process payment. Please verify date of birth and state.');
+            throw new \RuntimeException('Credova API error: ' . $response['error']);
         }
 
-        $this->orderTransactionMapper->setCredovaCustomFieldFromOrder(
-            $order,
-            $context,
-            [
-            'credovaPublicId' => $response['publicId'],
-            ]
-        );
+        if (empty($response['publicId']) || empty($response['link'])) {
+            $this->transactionStateHandler->fail($transaction->getOrderTransactionId(), $context);
+            throw new \RuntimeException('Credova API returned an error while processing payment');
+        }
+
+        $this->orderTransactionMapper->setCredovaCustomFieldOnTransaction($transaction->getOrderTransactionId(), $context, [
+            CredovaFields::ORDER_PUBLIC_ID => $response['publicId'],
+        ]);
 
         return new RedirectResponse($response['link']);
     }
@@ -148,19 +116,121 @@ class CredovaHandler extends AbstractPaymentHandler
     {
     }
 
+    private function getBirthdayString(OrderEntity $order): ?string
+    {
+        $customer = $order->getOrderCustomer()?->getCustomer();
+        $birthday = $customer?->getBirthday();
+        return $birthday instanceof \DateTimeInterface ? $birthday->format('Y-m-d') : null;
+    }
+
+    private function getBillingStateShort(OrderAddressEntity $billingAddress): ?string
+    {
+        $stateFull = $billingAddress->getCountryState()?->getShortCode();
+        if ($stateFull === null || $stateFull === '') {
+            return null;
+        }
+        $parts = explode('-', $stateFull);
+        return end($parts) ?: null;
+    }
+
+    private function buildApplicationBody(
+        OrderEntity $order,
+        OrderAddressEntity $billingAddress,
+        string $birthdayString,
+        string $stateShort,
+        PaymentTransactionStruct $transaction,
+        string $returnUrlOnCancel
+    ): array {
+        $orderCustomer = $order->getOrderCustomer();
+        $body = [
+            'firstName' => $billingAddress->getFirstName(),
+            'lastName' => $billingAddress->getLastName(),
+            'dateOfBirth' => $birthdayString,
+            'mobilePhone' => $billingAddress->getPhoneNumber(),
+            'email' => $orderCustomer?->getEmail() ?? '',
+            'referenceNumber' => $order->getOrderNumber(),
+            'redirectUrl' => $transaction->getReturnUrl(),
+            'cancelUrl' => $returnUrlOnCancel,
+            'address' => [
+                'street' => $billingAddress->getStreet(),
+                'city' => $billingAddress->getCity(),
+                'state' => $stateShort,
+                'zipCode' => $billingAddress->getZipCode(),
+            ],
+        ];
+        $body['products'] = $this->buildProductLines($order);
+        $shipping = (float) $order->getShippingTotal();
+        $totalTax = $this->calculateOrderLineItemsTax($order);
+        $body['products'][] = [
+            'id' => CredovaFields::PRODUCT_ID_SHIPPING,
+            'description' => CredovaFields::PRODUCT_DESCRIPTION_SHIPPING,
+            'quantity' => '1',
+            'value' => number_format($shipping, 2, '.', ''),
+        ];
+        $body['products'][] = [
+            'id' => CredovaFields::PRODUCT_ID_TAX,
+            'description' => CredovaFields::PRODUCT_DESCRIPTION_TAX,
+            'quantity' => '1',
+            'value' => number_format($totalTax, 2, '.', ''),
+        ];
+        return $body;
+    }
+
+    private function buildProductLines(OrderEntity $order): array
+    {
+        $products = [];
+        foreach ($order->getLineItems() as $lineItem) {
+            $price = $lineItem->getPrice();
+            $taxAmount = 0.0;
+            if ($price !== null) {
+                $calculatedTaxes = $price->getCalculatedTaxes();
+                $elements = $calculatedTaxes->getElements();
+                if ($elements !== []) {
+                    $first = reset($elements);
+                    $taxAmount = (float) $first->getTax();
+                }
+            }
+            $payload = $lineItem->getPayload() ?? [];
+            $products[] = [
+                'id' => $lineItem->getId(),
+                'description' => $lineItem->getLabel(),
+                'serialNumber' => $payload[CredovaFields::PAYLOAD_PRODUCT_NUMBER] ?? $lineItem->getId(),
+                'quantity' => (string) $lineItem->getQuantity(),
+                'value' => $lineItem->getTotalPrice(),
+            ];
+        }
+        return $products;
+    }
+
+    private function calculateOrderLineItemsTax(OrderEntity $order): float
+    {
+        $totalTax = 0.0;
+        foreach ($order->getLineItems() as $lineItem) {
+            $price = $lineItem->getPrice();
+            if ($price === null) {
+                continue;
+            }
+            $calculatedTaxes = $price->getCalculatedTaxes();
+            $elements = $calculatedTaxes->getElements();
+            if ($elements !== []) {
+                $first = reset($elements);
+                $totalTax += (float) $first->getTax();
+            }
+        }
+        return $totalTax;
+    }
+
     private function isValidDOB(?string $dob): bool
     {
-        if (!$dob) {
+        if ($dob === null || $dob === '') {
             return false;
         }
-
         try {
             $dobDate = new DateTime($dob);
             $now = new DateTime();
             $age = $now->diff($dobDate)->y;
-
             return $dobDate < $now && $age >= 18;
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return false;
         }
     }

@@ -23,10 +23,9 @@
 	<sw-single-select v-model:value="config['Credova.config.popupType']" :options="popupTypeOptions" placeholder="Select Popup Type" :label="$tc('sw-settings-credova.label.popupType')"/>
 
 	<sw-text-field v-model:value="config['Credova.config.dataMessage']" :label="$tc('sw-settings-credova.card.customText')" :placeholder="$tc('sw-settings-credova.card.customText')"/>
+	
 	<sw-switch-field
 			v-model:value="config['Credova.config.showCredovaLogo']"
 			:label="$tc('sw-settings-credova.label.showCredovaLogo')"
-			:disabled="isCustomTextFilled"
-			:help-text="$tc('sw-settings-credova.help.logoForcedByCustomText')"
 	/>
 </sw-card>
